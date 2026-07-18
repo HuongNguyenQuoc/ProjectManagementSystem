@@ -1,14 +1,13 @@
-import express from 'express';
-import { PORT } from '../config/env.js';
+import express from "express";
 
 const app = express();
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
-});
+app.use(express.json());
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.get("/", (req, res) => {
+  res.status(200).json({
+    message: "Welcome to the Project Management System API",
+  });
 });
 
 export default app;
