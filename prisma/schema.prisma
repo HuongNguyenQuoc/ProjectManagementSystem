@@ -1,0 +1,249 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+
+  @@map("user_status")
+}
+
+enum ProjectType {
+  WEB
+  MOBILE_APP
+  DESKTOP
+  API
+  AI
+  OTHER
+
+  @@map("project_type")
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+
+  @@map("project_status")
+}
+
+enum ProjectRole {
+  PROJECT_LEADER
+  MEMBER
+
+  @@map("project_role")
+}
+
+enum MemberPosition {
+  FRONTEND_DEVELOPER
+  BACKEND_DEVELOPER
+  BUSINESS_ANALYST
+  TESTER
+  UI_UX_DESIGNER
+
+  @@map("member_position")
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  BLOCKED
+  DONE
+  CANCELLED
+
+  @@map("task_status")
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+
+  @@map("task_priority")
+}
+
+enum IssueStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+
+  @@map("issue_status")
+}
+
+enum IssueSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+
+  @@map("issue_severity")
+}
+
+model User {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName String @map("full_name") @db.VarChar(100)
+  email String @unique @db.VarChar(255)
+  password String @db.VarChar(255)
+  status UserStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now()) @map("createdAt") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updatedAt") @db.Timestamptz(6)
+
+  createdProjects Project[] @relation("ProjectCreatedBy")
+  projectMemberships ProjectMember[]
+  createdTasks Task[] @relation("TaskCreatedBy")
+  taskAssignees TaskAssignee[] @relation("TaskAssigneeUser")
+  assignedByTasks TaskAssignee[] @relation("TaskAssigneeAssignedBy")
+  comments Comment[]
+  reportedIssues Issue[] @relation("IssueReportedBy")
+  assignedIssues Issue[] @relation("IssueAssignedTo")
+
+  @@map("users")
+}
+
+model Project {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String @db.VarChar(200)
+  projectType ProjectType @default(OTHER) @map("project_type")
+  description String?
+  status ProjectStatus @default(PLANNING)
+  startDate DateTime? @map("start_date") @db.Date
+  endDate DateTime? @map("end_date") @db.Date
+  createdBy String @map("created_by") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  creator User @relation("ProjectCreatedBy", fields: [createdBy], references: [id])
+  members ProjectMember[]
+  tasks Task[]
+  issues Issue[]
+
+  @@index([createdBy], map: "idx_projects_created_by")
+  @@index([status], map: "idx_projects_status")
+  @@index([projectType], map: "idx_projects_project_type")
+  @@map("projects")
+}
+
+model ProjectMember {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String @map("project_id") @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  projectRole ProjectRole  @default(MEMBER) @map("project_role")
+  position MemberPosition //MemberPosition is enum defined in the schema.prisma file
+
+  joinedAt DateTime @default(now()) @map("joined_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId], map: "unique_project_member")
+  @@index([projectId], map: "idx_project_members_project_id")
+  @@index([userId], map: "idx_project_members_user_id")
+  @@map("project_members")
+}
+
+model Task {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title String @db.VarChar(200)
+  description String?
+  status TaskStatus @default(TODO)
+  priority TaskPriority @default(MEDIUM)
+  progress Int @default(0) 
+  projectId String @map("project_id") @db.Uuid
+  createdBy String @map("created_by") @db.Uuid
+
+  startDate DateTime? @map("start_date") @db.Date
+  dueDate DateTime? @map("due_date") @db.Date
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creator User @relation("TaskCreatedBy", fields: [createdBy], references: [id])
+  assignees TaskAssignee[]
+  comments Comment[]
+  issues Issue[]
+
+  @@index([projectId], map: "idx_tasks_project_id")
+  @@index([status], map: "idx_tasks_status")
+  @@index([dueDate], map: "idx_tasks_due_date")
+  @@index([projectId, status, dueDate], map: "idx_tasks_project_id_status_due_date")
+  @@map("tasks")
+}
+
+model TaskAssignee {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  taskId String @map("task_id") @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  assignedBy String @map("assigned_by") @db.Uuid
+  assignedAt DateTime @default(now()) @map("assigned_at") @db.Timestamptz(6)
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation("TaskAssigneeUser", fields: [userId], references: [id], onDelete: Cascade)
+  assignedByUser User @relation("TaskAssigneeAssignedBy", fields: [assignedBy], references: [id])
+
+  @@unique([taskId, userId], map: "unique_task_assignee")
+  @@index([taskId], map: "idx_task_assignees_task_id")
+  @@index([userId], map: "idx_task_assignees_user_id")
+  @@map("task_assignees")
+}
+
+model Comment {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  taskId String @map("task_id") @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  content String
+  isEdited Boolean @default(false) @map("is_edited")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([taskId], map: "idx_comments_task_id")
+  @@index([userId], map: "idx_comments_user_id")
+  @@map("comments")
+}
+
+model Issue {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  projectId String @map("project_id") @db.Uuid
+  taskId String? @map("task_id") @db.Uuid
+  title String @db.VarChar(200)
+  description String
+  severity IssueSeverity @default(MEDIUM)
+  status IssueStatus @default(OPEN)
+  reportedBy String @map("reported_by") @db.Uuid
+  assignedTo String? @map("assigned_to") @db.Uuid
+  resolvedAt DateTime? @map("resolved_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  reporter User @relation("IssueReportedBy", fields: [reportedBy], references: [id])
+  assignee User? @relation("IssueAssignedTo", fields: [assignedTo], references: [id])
+
+  @@index([projectId], map: "idx_issues_project_id")
+  @@index([taskId], map: "idx_issues_task_id")
+  @@index([status, severity], map: "idx_issues_status_severity")
+  @@map("issues")
+}
