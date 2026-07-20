@@ -3,6 +3,7 @@ import { AppError } from "./errors/appError.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import authRouter from "./routes/auth.routes.js";
 import cookieParser from "cookie-parser";
+import projectRouter from "./routes/project.routes.js";
 
 const app: Application = express();
 
@@ -16,6 +17,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/api/auth", authRouter);
+app.use("/api/projects", projectRouter);
 
 app.use((req: Request, _res: Response, next: NextFunction) => {
   next(new AppError(404, `Route ${req.method} ${req.originalUrl} not found`));

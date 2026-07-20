@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
+import { COOKIE_NAME } from "../../config/env.js";
 import { loginUser, registerUser } from "../services/auth.service.js";
-import { COOKIE_NAME, EXPIRES_IN } from "../../config/env.js";
 
 export const registerController = async (req: Request, res: Response) => {
   const user = await registerUser(req.body);
@@ -18,7 +18,7 @@ export const loginController = async (req: Request, res: Response) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: Number(EXPIRES_IN)
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
   });
 
   res.status(200).json({

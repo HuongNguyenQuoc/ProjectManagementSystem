@@ -57,7 +57,7 @@ export const loginUser = async (input: LoginInput) => {
   const token = jwt.sign(
     { userId: user.id },
     JWT_SECRET as string,
-    { expiresIn: Number(EXPIRES_IN) / 1000 }
+    { expiresIn: EXPIRES_IN as jwt.SignOptions['expiresIn'] }
   );
 
   const { password, ...safeUser } = user;
