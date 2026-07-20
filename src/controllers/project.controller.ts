@@ -5,6 +5,7 @@ import {
   createProjectService,
   getProjectDetailService,
   listProjectsService,
+  updateProjectService
 } from "../services/project.service.js";
 
 export const createProjectController = async (
@@ -61,3 +62,13 @@ export const getProjectByIdController = async (
     data: project,
   });
 };
+
+export const updateProjectController = async (req: AuthRequest, res: Response) => {
+  const updatedProject = await updateProjectService(req.params.projectId as string, req.body,
+    req.userId as string);
+  res.status(200).json({
+    success: true,
+    message: "Project updated successfully",
+    data: updatedProject,
+  });
+}

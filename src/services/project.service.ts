@@ -1,5 +1,5 @@
 import { AppError } from "../errors/appError.js";
-import { MemberPosition, ProjectType } from "../generated/prisma/enums.js";
+import { MemberPosition, ProjectType, ProjectStatus } from "../generated/prisma/enums.js";
 import { prisma } from "../lib/prisma.js";
 import {
   addProjectMember,
@@ -7,6 +7,7 @@ import {
   findAllProjectsWithStats,
   findProjectById,
   findProjectMember,
+  updateProject,
 } from "../repositories/project.repository.js";
 import { findUserById } from "../repositories/user.repository.js";
 
@@ -188,4 +189,38 @@ export const updateProjectService = async (
   projectId: string,
   input: UpdateProjectInput,
   requesterId: string,
-) 
+) => {
+  const requesterMembership = await findProjectMember(projectId, requesterId);
+  if (!requesterMembership || requesterMembership.projectRole !== "PROJECT_LEADER") {
+    throw new AppError(403, "You are not authorized to update this project");
+  }
+
+  if (input.projectType !== undefined && !Object.values(ProjectType).includes(input.projectType as ProjectType)) {
+    throw new AppError(400, "Invalid project type");
+  }
+
+  if (input.status !== undefined && !Object.values(ProjectStatus).includes(input.status as ProjectStatus)) {
+    throw new AppError(400, "Invalid project status");
+  }
+
+  const currentProject = await findProjectById(projectId);
+  if (!currentProject) {
+    throw new AppError(404, "Project not found");
+  }
+
+  const nextStartDate = input.startDate ? new Date(input.startDate) : currentProject.startDate;
+  const nextEndDate = input.endDate ? new Date(input.endDate) : currentProject.endDate;
+
+  if (nextEndDate && nextStartDate && nextEndDate < nextStartDate) {
+    throw new AppError(400, "End date cannot be earlier than start date");
+  }
+
+  return updateProject(projectId, {
+    ...(input.name !== undefined && { name: input.name }),
+    ...(input.description !== undefined && { description: input.description }),
+    ...(input.projectType !== undefined && { projectType: input.projectType as ProjectType }),
+    ...(input.startDate !== undefined && { startDate: nextStartDate }),
+    ...(input.endDate !== undefined && { endDate: nextEndDate }),
+    ...(input.status !== undefined && { status: input.status as ProjectStatus }),   
+  })
+};

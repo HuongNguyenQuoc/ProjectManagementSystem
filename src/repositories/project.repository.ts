@@ -59,7 +59,7 @@ export const findProjectMember = (projectId: string, userId: string) => {
 
 export const updateProject = (
   projectId: string,
-  data: Prisma.ProjectUpdateInput,
+  data: Prisma.ProjectUncheckedUpdateInput,
 ) => {
   return prisma.project.update({
     where: { id: projectId },
