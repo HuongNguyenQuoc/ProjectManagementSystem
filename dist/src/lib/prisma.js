@@ -18,7 +18,7 @@ if (NODE_ENV !== 'production')
     globalForPrisma.prisma = prisma;
 export const connectDatabase = async () => {
     await prisma.$queryRaw `SELECT 1`;
-    console.log('Connected to PostgreSQL databse via Prisma');
+    console.log('Connected to PostgreSQL database via Prisma');
 };
 export const disconnectDatabase = async () => {
     await prisma.$disconnect();
