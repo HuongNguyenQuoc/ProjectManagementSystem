@@ -1,8 +1,16 @@
 import type { Response } from "express";
 import { AuthRequest } from "../middlewares/requireAuth.js";
-import { createProjectService, listProjectsService } from "../services/project.service.js";
+import {
+  addMemberToProjectService,
+  createProjectService,
+  getProjectDetailService,
+  listProjectsService,
+} from "../services/project.service.js";
 
-export const createProjectController = async (req: AuthRequest, res: Response) => {
+export const createProjectController = async (
+  req: AuthRequest,
+  res: Response,
+) => {
   const project = await createProjectService(req.body, req.userId as string);
   res.status(201).json({
     success: true,
@@ -11,11 +19,45 @@ export const createProjectController = async (req: AuthRequest, res: Response) =
   });
 };
 
-export const listProjectsController = async (_req: AuthRequest, res: Response) => {
+export const listProjectsController = async (
+  _req: AuthRequest,
+  res: Response,
+) => {
   const projects = await listProjectsService();
   res.status(200).json({
     success: true,
     message: "Projects retrieved successfully",
     data: projects,
+  });
+};
+
+export const addMemberToProjectController = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  const member = await addMemberToProjectService(
+    req.params.projectId as string,
+    req.body,
+    req.userId as string,
+  );
+  res.status(200).json({
+    success: true,
+    message: "Member added to project successfully",
+    data: member,
+  });
+};
+
+export const getProjectByIdController = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  const project = await getProjectDetailService(
+    req.params.projectId as string,
+    req.userId as string,
+  );
+  res.status(200).json({
+    success: true,
+    message: "Project details retrieved successfully",
+    data: project,
   });
 };

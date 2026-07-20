@@ -17,6 +17,16 @@ export const addProjectMember = (
   return client.projectMember.create({ data });
 };
 
+export const findProjectById = (projectId: string) => {
+  return prisma.project.findUnique({
+    where: { id: projectId },
+    include: {
+      members: { include: { user: true } },
+      tasks: true,
+    }
+  });
+};
+
 export const findAllProjectsWithStats = () => {
   return prisma.project.findMany({
     include: {
@@ -44,5 +54,15 @@ export const findProjectMember = (projectId: string, userId: string) => {
         userId,
       },
     },
+  });
+};
+
+export const updateProject = (
+  projectId: string,
+  data: Prisma.ProjectUpdateInput,
+) => {
+  return prisma.project.update({
+    where: { id: projectId },
+    data,
   });
 };
