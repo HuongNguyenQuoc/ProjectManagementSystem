@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import type { Prisma } from "../generated/prisma/client.js";
+import { updateOptions } from "recharts/types/state/rootPropsSlice.js";
 
 type DbClient = typeof prisma | Prisma.TransactionClient;
 
@@ -28,5 +29,19 @@ export const findTasksByProjectId = (projectId: string) => {
       }
     },
     orderBy: { createdAt: "desc" }
+  });
+};
+
+export const findTaskById = (taskId: string) => {
+  return prisma.task.findUnique({
+    where: { id: taskId },
+    include: { assignees: true },
+  });
+};
+
+export const updateTask = ( taskId: string, data: Prisma.TaskUncheckedUpdateInput) => {
+  return prisma.task.update({
+    where: { id: taskId },
+    data,
   });
 };

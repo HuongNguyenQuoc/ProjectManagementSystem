@@ -1,11 +1,14 @@
 import { AppError } from "../errors/appError.js";
-import { TaskPriority } from "../generated/prisma/enums.js";
+import { Prisma } from "../generated/prisma/client.js";
+import { TaskPriority, TaskStatus } from "../generated/prisma/enums.js";
 import { prisma } from "../lib/prisma.js";
 import { findProjectMember } from "../repositories/project.repository.js";
 import {
   addTaskAssignee,
   createTask,
   findTasksByProjectId,
+  findTaskById,
+  updateTask
 } from "../repositories/task.repository.js";
 
 interface CreateTaskInput {
@@ -13,6 +16,13 @@ interface CreateTaskInput {
   description?: string;
   priority?: string;
   assigneeId?: string;
+  startDate?: string;
+  dueDate?: string;
+}
+
+interface UpdateTaskInput {
+  status?: string;
+  progress?: number;
   startDate?: string;
   dueDate?: string;
 }
@@ -101,3 +111,54 @@ export const listTasksByProjectService = async (
     updatedAt: task.updatedAt,
   }));
 };
+
+export const updateTaskService = async (
+  taskId: string,
+  input: UpdateTaskInput,
+  requesterId: string,
+  projectId: string
+) => {
+  const requesterMembership = await findProjectMember(projectId, requesterId);
+  if (!requesterMembership) {
+    throw new AppError(403, "You are not authorized to update tasks in this project");
+  }
+
+  const task = await findTaskById(taskId);
+  if (!task) {
+    throw new AppError(404, "Task not found");
+  }
+
+  const isLeader = requesterMembership.projectRole === "PROJECT_LEADER";
+  const isAssignee = task.assignees.some((a) => a.userId === requesterId);
+
+  if (!isLeader && !isAssignee) {
+    throw new AppError(403, "You are not authorized to update this task");
+  }
+
+  if (
+    input.progress !== undefined && 
+    (!Number.isInteger(input.progress) || input.progress < 0 || input.progress > 100)
+  ) {
+    throw new AppError(400, "Progress must be an integer between 0 and 100");
+  }
+
+  const data: Prisma.TaskUncheckedUpdateInput = {};
+
+  if (input.progress !== undefined) {
+    data.progress = input.progress;
+  }
+ 
+  if (isLeader) {
+    if (input.status !== undefined) {
+      if (!Object.values(TaskStatus).includes(input.status as TaskStatus)) {
+        throw new AppError(400, "Invalid task status");
+      }
+      data.status = input.status as TaskStatus;
+      data.completedAt = input.status === "DONE" ? new Date() : null;
+    }
+    if (input.startDate !== undefined) {
+      data.startDate = new Date(input.startDate);
+    }
+  }
+  return updateTask(taskId, data);
+}
