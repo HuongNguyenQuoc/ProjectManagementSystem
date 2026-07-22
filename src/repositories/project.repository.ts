@@ -66,3 +66,13 @@ export const updateProject = (
     data,
   });
 };
+
+export const removeProjectMember = (projectId: string, userId: string) => {
+  return prisma.projectMember.delete({
+    where: {
+      projectId_userId: {
+        projectId, userId
+      }
+    }
+  });
+};

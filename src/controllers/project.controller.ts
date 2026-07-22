@@ -5,7 +5,8 @@ import {
   createProjectService,
   getProjectDetailService,
   listProjectsService,
-  updateProjectService
+  updateProjectService,
+  removeMemberFromProjectService
 } from "../services/project.service.js";
 
 export const createProjectController = async (
@@ -72,3 +73,12 @@ export const updateProjectController = async (req: AuthRequest, res: Response) =
     data: updatedProject,
   });
 }
+
+export const removeMemberFromProjectController = async (req: AuthRequest, res: Response) => {
+  const removeMember = await removeMemberFromProjectService(req.params.projectId as string, req.params.userId as string, req.userId as string);
+  res.status(200).json({
+    success: true,
+    message: "Member removed from project successfully",
+    data: removeMember,
+  });
+};

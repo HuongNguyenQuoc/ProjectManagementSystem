@@ -8,6 +8,7 @@ import {
   findProjectById,
   findProjectMember,
   updateProject,
+  removeProjectMember,
 } from "../repositories/project.repository.js";
 import { findUserById } from "../repositories/user.repository.js";
 
@@ -69,6 +70,35 @@ export const addMemberToProjectService = async (
     projectRole: "MEMBER",
     position: input.position as MemberPosition,
   });
+};
+
+export const removeMemberFromProjectService = async (
+  projectId: string,
+  userId: string,
+  requesterId: string,
+
+) => {
+  const requesterMembership = await findProjectMember(projectId, requesterId);
+  if (
+    !requesterMembership ||
+    requesterMembership.projectRole !== "PROJECT_LEADER"
+  ) {
+    throw new AppError(
+      403,
+      "You are not authorized to remove members from this project",
+    );
+  }
+
+  const targetMembership = await findProjectMember(projectId, userId);
+  if (!targetMembership) {
+    throw new AppError(404, "User is not a member of this project");
+  }
+
+  if (targetMembership.projectRole === "PROJECT_LEADER") {
+    throw new AppError(400, "Cannot remove the project leader from the project");
+  }
+
+  return removeProjectMember(projectId, userId);
 };
 
 export const createProjectService = async (
