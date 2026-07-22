@@ -1,10 +1,20 @@
 import type { Response } from "express";
 import type { AuthRequest } from "../middlewares/requireAuth.js";
-import { createCommentService, listCommentsByTaskService } from "../services/comment.service.js";
-import { REPLCommand } from "repl";
+import {
+  createCommentService,
+  listCommentsByTaskService,
+} from "../services/comment.service.js";
 
-export const createCommentController = async (req: AuthRequest, res: Response) => {
-  const comment = await createCommentService(req.params.projectId as string, req.params.taskId as string, req.body, req.userId as string);
+export const createCommentController = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  const comment = await createCommentService(
+    req.params.projectId as string,
+    req.params.taskId as string,
+    req.body,
+    req.userId as string,
+  );
   res.status(201).json({
     success: true,
     message: "Comment created successfully",
@@ -12,8 +22,15 @@ export const createCommentController = async (req: AuthRequest, res: Response) =
   });
 };
 
-export const listCommentsByTaskController = async (req: AuthRequest, res: Response) => {
-  const comments = await listCommentsByTaskService(req.params.projectId as string, req.params.taskId as string, req.userId as string);
+export const listCommentsByTaskController = async (
+  req: AuthRequest,
+  res: Response,
+) => {
+  const comments = await listCommentsByTaskService(
+    req.params.projectId as string,
+    req.params.taskId as string,
+    req.userId as string,
+  );
   res.status(200).json({
     success: true,
     message: "Comments retrieved successfully",

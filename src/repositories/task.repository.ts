@@ -1,19 +1,18 @@
-import { prisma } from "../lib/prisma.js";
 import type { Prisma } from "../generated/prisma/client.js";
-import { updateOptions } from "recharts/types/state/rootPropsSlice.js";
+import { prisma } from "../lib/prisma.js";
 
 type DbClient = typeof prisma | Prisma.TransactionClient;
 
 export const createTask = (
   data: Prisma.TaskUncheckedCreateInput,
-  client: DbClient = prisma
+  client: DbClient = prisma,
 ) => {
   return client.task.create({ data });
 };
 
 export const addTaskAssignee = (
   data: Prisma.TaskAssigneeUncheckedCreateInput,
-  client: DbClient = prisma
+  client: DbClient = prisma,
 ) => {
   return client.taskAssignee.create({ data });
 };
@@ -24,11 +23,11 @@ export const findTasksByProjectId = (projectId: string) => {
     include: {
       assignees: {
         include: {
-          user: true
-        }
-      }
+          user: true,
+        },
+      },
     },
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
   });
 };
 
@@ -39,7 +38,10 @@ export const findTaskById = (taskId: string) => {
   });
 };
 
-export const updateTask = ( taskId: string, data: Prisma.TaskUncheckedUpdateInput) => {
+export const updateTask = (
+  taskId: string,
+  data: Prisma.TaskUncheckedUpdateInput,
+) => {
   return prisma.task.update({
     where: { id: taskId },
     data,

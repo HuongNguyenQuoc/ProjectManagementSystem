@@ -1,9 +1,14 @@
-import type { Request, Response, NextFunction } from "express";
+import type { NextFunction, Request, Response } from "express";
+import { NODE_ENV } from "../../config/env.js";
 import { AppError } from "../errors/appError.js";
 import { Prisma } from "../generated/prisma/client.js";
-import { NODE_ENV } from "../../config/env.js";
 
-export function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
+export function errorHandler(
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   if (res.headersSent) {
     return next(err);
   }
@@ -11,7 +16,7 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
     return;
   }
@@ -20,7 +25,7 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
     if (err.code === "P2002") {
       res.status(409).json({
         success: false,
-        message: "Unique constraint failed. Duplicate value exists."
+        message: "Unique constraint failed. Duplicate value exists.",
       });
       return;
     }
@@ -28,7 +33,7 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
     if (err.code === "P2025") {
       res.status(404).json({
         success: false,
-        message: "Record not found."
+        message: "Record not found.",
       });
       return;
     }
@@ -38,7 +43,11 @@ export function errorHandler(err: Error, req: Request, res: Response, next: Next
 
   res.status(500).json({
     success: false,
-    message: process.env.NODE_ENV === "production" ? "Internal Server Error" :
-    err instanceof Error ? err.message : "An unexpected error occurred.",
+    message:
+      NODE_ENV === "production"
+        ? "Internal Server Error"
+        : err instanceof Error
+          ? err.message
+          : "An unexpected error occurred.",
   });
 }

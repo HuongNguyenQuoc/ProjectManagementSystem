@@ -124,7 +124,7 @@ export const updateTaskService = async (
   }
 
   const task = await findTaskById(taskId);
-  if (!task) {
+  if (!task || task.projectId !== projectId) {
     throw new AppError(404, "Task not found");
   }
 
@@ -158,6 +158,9 @@ export const updateTaskService = async (
     }
     if (input.startDate !== undefined) {
       data.startDate = new Date(input.startDate);
+    }
+    if (input.dueDate !== undefined) {
+      data.dueDate = new Date(input.dueDate);
     }
   }
   return updateTask(taskId, data);

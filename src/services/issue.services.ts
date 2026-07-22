@@ -1,10 +1,13 @@
-import { serialize } from "node:v8";
 import { AppError } from "../errors/appError.js";
 import { IssueSeverity, IssueStatus } from "../generated/prisma/client.js";
-import { createIssue, findIssuesByProjectId, findIssueByIdRepository, updateIssueRepository } from "../repositories/issue.repositories.js";
+import {
+  createIssue,
+  findIssueByIdRepository,
+  findIssuesByProjectId,
+  updateIssueRepository,
+} from "../repositories/issue.repositories.js";
 import { findProjectMember } from "../repositories/project.repository.js";
 import { findTaskById } from "../repositories/task.repository.js";
-import { resolve } from "node:path";
 
 interface CreateIssueInput {
   title: string;
@@ -26,36 +29,56 @@ export const updateIssueService = async (
   requesterId: string,
 ) => {
   const requesterMembership = await findProjectMember(projectId, requesterId);
-  if (!requesterMembership || requesterMembership.projectRole !== "PROJECT_LEADER") {
-    throw new AppError(403, "You are not authorized to update issues in this project");
+  if (
+    !requesterMembership ||
+    requesterMembership.projectRole !== "PROJECT_LEADER"
+  ) {
+    throw new AppError(
+      403,
+      "You are not authorized to update issues in this project",
+    );
   }
 
-  if (input.status !== undefined && !Object.values(IssueStatus).includes(input.status as IssueStatus)) {
+  if (
+    input.status !== undefined &&
+    !Object.values(IssueStatus).includes(input.status as IssueStatus)
+  ) {
     throw new AppError(400, "Invalid status value");
   }
-  if (input.severity !== undefined && !Object.values(IssueSeverity).includes(input.severity as IssueSeverity)) {
+  if (
+    input.severity !== undefined &&
+    !Object.values(IssueSeverity).includes(input.severity as IssueSeverity)
+  ) {
     throw new AppError(400, "Invalid severity value");
   }
-  
+
   const issue = await findIssueByIdRepository(issueId);
   if (!issue || issue.projectId !== projectId) {
     throw new AppError(404, "Issue not found in this project");
   }
 
   if (input.assignedTo) {
-    const assigneeMembership = await findProjectMember(projectId, input.assignedTo);
+    const assigneeMembership = await findProjectMember(
+      projectId,
+      input.assignedTo,
+    );
     if (!assigneeMembership) {
       throw new AppError(400, "Assignee is not a member of this project");
     }
   }
 
-  const isResolvingStatus = input.status === "RESOLVED" || input.status === "CLOSED";
+  const isResolvingStatus =
+    input.status === "RESOLVED" || input.status === "CLOSED";
 
   return updateIssueRepository(issueId, {
     ...(input.status !== undefined && { status: input.status as IssueStatus }),
-    ...(input.severity !== undefined && { severity: input.severity as IssueSeverity }),
+    ...(input.severity !== undefined && {
+      severity: input.severity as IssueSeverity,
+    }),
     ...(input.assignedTo !== undefined && { assignedTo: input.assignedTo }),
-    ...(input.status !== undefined && { resolvedAt: isResolvingStatus ? new Date() : null }),
+    ...(input.status !== undefined && {
+      resolvedAt: isResolvingStatus ? new Date() : null,
+    }),
   });
 };
 
@@ -71,7 +94,10 @@ export const createIssueService = async (
   if (!input.title || !input.description) {
     throw new AppError(400, "Title and description are required");
   }
-  if (input.severity !== undefined && !Object.values(IssueSeverity).includes(input.severity as IssueSeverity)) {
+  if (
+    input.severity !== undefined &&
+    !Object.values(IssueSeverity).includes(input.severity as IssueSeverity)
+  ) {
     throw new AppError(400, "Invalid severity value");
   }
   if (input.taskId) {
@@ -81,7 +107,7 @@ export const createIssueService = async (
     }
   }
   return createIssue({
-    projectId, 
+    projectId,
     taskId: input.taskId ?? null,
     title: input.title,
     description: input.description,
@@ -90,12 +116,15 @@ export const createIssueService = async (
   });
 };
 
-export const listIssuesByProjectService = async (projectId: string, requesterId: string) => {
+export const listIssuesByProjectService = async (
+  projectId: string,
+  requesterId: string,
+) => {
   const requesterMembership = await findProjectMember(projectId, requesterId);
   if (!requesterMembership) {
     throw new AppError(403, "You are not belong to this project");
   }
-  
+
   const issues = await findIssuesByProjectId(projectId);
 
   return issues.map((issue) => ({

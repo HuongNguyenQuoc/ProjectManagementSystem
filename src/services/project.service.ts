@@ -196,7 +196,7 @@ export const getProjectDetailService = async (
   return {
     id: project.id,
     name: project.name,
-    ProjectType: project.projectType,
+    projectType: project.projectType,
     description: project.description,
     startDate: project.startDate,
     endDate: project.endDate,

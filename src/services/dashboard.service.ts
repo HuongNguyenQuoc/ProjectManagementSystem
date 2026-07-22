@@ -1,28 +1,37 @@
 import { AppError } from "../errors/appError.js";
-import { findProjectById, findProjectMember } from "../repositories/project.repository.js";
-import { findTaskById, findTasksByProjectId } from "../repositories/task.repository.js";
 import { findIssuesByProjectId } from "../repositories/issue.repositories.js";
+import {
+  findProjectById,
+  findProjectMember,
+} from "../repositories/project.repository.js";
+import { findTasksByProjectId } from "../repositories/task.repository.js";
 
 const countBy = <T, K extends string | number | symbol>(
   items: T[],
   keyFn: (item: T) => K,
 ): Record<K, number> => {
-  return items.reduce((acc, item) => {
-    const key = keyFn(item);
-    acc[key] = (acc[key] ?? 0) + 1;
-    return acc;
-  }, {} as Record<K, number>);
+  return items.reduce(
+    (acc, item) => {
+      const key = keyFn(item);
+      acc[key] = (acc[key] ?? 0) + 1;
+      return acc;
+    },
+    {} as Record<K, number>,
+  );
 };
 
-export const getProjectDashboardService = async (projectId: string, userId: string) => {
+export const getProjectDashboardService = async (
+  projectId: string,
+  userId: string,
+) => {
   const requesterMembership = await findProjectMember(projectId, userId);
   if (!requesterMembership) {
-    throw new AppError(403, 'You are not a member of this project');
+    throw new AppError(403, "You are not a member of this project");
   }
 
   const project = await findProjectById(projectId);
   if (!project) {
-    throw new AppError(404, 'Project not found');
+    throw new AppError(404, "Project not found");
   }
 
   const tasks = await findTasksByProjectId(projectId);
@@ -30,11 +39,19 @@ export const getProjectDashboardService = async (projectId: string, userId: stri
 
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter((task) => task.status === "DONE").length;
-  const progress = totalTasks > 0 ? Number(((completedTasks / totalTasks) * 100 ).toFixed(2) )
-  : 0;
+  const progress =
+    totalTasks > 0
+      ? Number(((completedTasks / totalTasks) * 100).toFixed(2))
+      : 0;
 
   const now = new Date();
-  const overdueTasks = tasks.filter((task) => task.dueDate && task.status !== "DONE" && task.dueDate < now && task.status !== "CANCELLED").length;
+  const overdueTasks = tasks.filter(
+    (task) =>
+      task.dueDate &&
+      task.status !== "DONE" &&
+      task.dueDate < now &&
+      task.status !== "CANCELLED",
+  ).length;
 
   const openIssues = issues.filter((issue) => issue.status !== "CLOSED").length;
 
@@ -57,6 +74,6 @@ export const getProjectDashboardService = async (projectId: string, userId: stri
     tasksByPriority,
     issuesBySeverity,
     totalIssues: issues.length,
-    openIssues
+    openIssues,
   };
 };
