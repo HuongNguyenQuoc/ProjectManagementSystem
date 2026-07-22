@@ -3,6 +3,7 @@ import { addMemberToProjectController, createProjectController, getProjectByIdCo
 import { requireAuth } from '../middlewares/requireAuth.js';
 import taskRouter from './task.routes.js';
 import issueRouter from './issue.routes.js';
+import { getProjectDashboardController } from '../controllers/dashboard.controller.js';
 
 const projectRouter = Router();
 
@@ -16,5 +17,6 @@ projectRouter.post('/:projectId/members', addMemberToProjectController);
 
 projectRouter.use('/:projectId/tasks', taskRouter);
 projectRouter.use('/:projectId/issues', issueRouter);
+projectRouter.get('/:projectId/dashboard', getProjectDashboardController);
 
 export default projectRouter;

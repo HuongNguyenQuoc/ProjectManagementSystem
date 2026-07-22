@@ -5,6 +5,15 @@ export const createProject = (data, client = prisma) => {
 export const addProjectMember = (data, client = prisma) => {
     return client.projectMember.create({ data });
 };
+export const findProjectById = (projectId) => {
+    return prisma.project.findUnique({
+        where: { id: projectId },
+        include: {
+            members: { include: { user: true } },
+            tasks: true,
+        }
+    });
+};
 export const findAllProjectsWithStats = () => {
     return prisma.project.findMany({
         include: {
@@ -31,6 +40,12 @@ export const findProjectMember = (projectId, userId) => {
                 userId,
             },
         },
+    });
+};
+export const updateProject = (projectId, data) => {
+    return prisma.project.update({
+        where: { id: projectId },
+        data,
     });
 };
 //# sourceMappingURL=project.repository.js.map

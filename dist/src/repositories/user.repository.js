@@ -1,7 +1,7 @@
 import { prisma } from "../lib/prisma.js";
 export const findUserByEmail = (email) => {
     return prisma.user.findUnique({
-        where: { email }
+        where: { email },
     });
 };
 export const createUser = (data) => {
@@ -9,7 +9,7 @@ export const createUser = (data) => {
 };
 export const findUserById = (id) => {
     return prisma.user.findUnique({
-        where: { id }
+        where: { id },
     });
 };
 //# sourceMappingURL=user.repository.js.map

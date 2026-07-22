@@ -16,3 +16,16 @@ export const findIssuesByProjectId = async (projectId: string) => {
     orderBy: { createdAt: "desc" },
   });
 };
+
+export const findIssueByIdRepository = async (issueId: string) => {
+  return await prisma.issue.findUnique({
+    where: { id: issueId },
+  });
+};  
+
+export const updateIssueRepository = async (issueId: string, data: Prisma.IssueUncheckedUpdateInput) => {
+  return await prisma.issue.update({
+    where: { id: issueId },
+    data,
+  });
+};
