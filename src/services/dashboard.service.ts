@@ -25,8 +25,8 @@ export const getProjectDashboardService = async (
   userId: string,
 ) => {
   const requesterMembership = await findProjectMember(projectId, userId);
-  if (!requesterMembership) {
-    throw new AppError(403, "You are not a member of this project");
+  if (!requesterMembership || requesterMembership.projectRole !== "PROJECT_LEADER") {
+    throw new AppError(403, "Only the project leader can view the dashboard");
   }
 
   const project = await findProjectById(projectId);

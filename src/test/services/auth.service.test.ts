@@ -53,7 +53,7 @@ describe("auth.service", () => {
       expect(result).not.toHaveProperty("password");
 
       const savedData = vi.mocked(userRepository.createUser).mock.calls[0][0];
-      expect(savedData.password).not.toBe("1234456");
+      expect(savedData.password).not.toBe("123456");
     });
   });
 
