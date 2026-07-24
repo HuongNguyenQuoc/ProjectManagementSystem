@@ -103,6 +103,8 @@ export const listTasksByProjectService = async (
     description: task.description,
     priority: task.priority,
     status: task.status,
+    progress: task.progress,
+    assigneeId: task.assignees[0]?.userId ?? null,
     assigneeName: task.assignees[0]?.user?.fullName ?? null,
     startDate: task.startDate,
     dueDate: task.dueDate,

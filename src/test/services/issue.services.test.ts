@@ -5,6 +5,7 @@ import * as taskRepository from "../../repositories/task.repository.js";
 import * as issueRepository from "../../repositories/issue.repositories.js";
 import {
   createIssueService,
+  deleteIssueService,
   listIssuesByProjectService,
   updateIssueService,
 } from "../../services/issue.services.js";
@@ -109,20 +110,26 @@ describe("issue.services", () => {
   });
 
   describe("updateIssueService", () => {
-    it("throws 403 when requester is not the project leader", async () => {
-      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(memberMembership as never);
+    it("throws 403 when requester is not a project member at all", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(null as never);
 
       await expect(
-        updateIssueService("p1", "i1", { status: "RESOLVED" }, "member-1"),
+        updateIssueService("p1", "i1", { status: "RESOLVED" }, "outsider"),
       ).rejects.toThrow(AppError);
     });
 
-    it("throws 400 when status is invalid", async () => {
-      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(leaderMembership as never);
+    it("throws 403 when requester is a member but neither leader nor the reporter", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(memberMembership as never);
+      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({
+        id: "i1",
+        projectId: "p1",
+        reportedBy: "someone-else",
+        status: "OPEN",
+      } as never);
 
       await expect(
-        updateIssueService("p1", "i1", { status: "DONE" }, "leader-1"),
-      ).rejects.toThrow(/status/i);
+        updateIssueService("p1", "i1", { title: "New title" }, "member-1"),
+      ).rejects.toThrow(AppError);
     });
 
     it("throws 404 when issue does not belong to the project", async () => {
@@ -134,11 +141,30 @@ describe("issue.services", () => {
       ).rejects.toThrow(AppError);
     });
 
+    it("throws 400 when status is invalid", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(leaderMembership as never);
+      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({
+        id: "i1",
+        projectId: "p1",
+        reportedBy: "leader-1",
+        status: "OPEN",
+      } as never);
+
+      await expect(
+        updateIssueService("p1", "i1", { status: "DONE" }, "leader-1"),
+      ).rejects.toThrow(/status/i);
+    });
+
     it("throws 400 when assignedTo is not a project member", async () => {
       vi.mocked(projectRepository.findProjectMember)
         .mockResolvedValueOnce(leaderMembership as never) // requester check
         .mockResolvedValueOnce(null as never); // assignedTo check
-      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({ id: "i1", projectId: "p1" } as never);
+      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({
+        id: "i1",
+        projectId: "p1",
+        reportedBy: "leader-1",
+        status: "OPEN",
+      } as never);
 
       await expect(
         updateIssueService("p1", "i1", { assignedTo: "outsider" }, "leader-1"),
@@ -147,7 +173,12 @@ describe("issue.services", () => {
 
     it("sets resolvedAt when status changes to RESOLVED", async () => {
       vi.mocked(projectRepository.findProjectMember).mockResolvedValue(leaderMembership as never);
-      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({ id: "i1", projectId: "p1" } as never);
+      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({
+        id: "i1",
+        projectId: "p1",
+        reportedBy: "leader-1",
+        status: "OPEN",
+      } as never);
       vi.mocked(issueRepository.updateIssueRepository).mockResolvedValue({} as never);
 
       await updateIssueService("p1", "i1", { status: "RESOLVED" }, "leader-1");
@@ -159,13 +190,144 @@ describe("issue.services", () => {
 
     it("clears resolvedAt when status changes away from RESOLVED/CLOSED", async () => {
       vi.mocked(projectRepository.findProjectMember).mockResolvedValue(leaderMembership as never);
-      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({ id: "i1", projectId: "p1" } as never);
+      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({
+        id: "i1",
+        projectId: "p1",
+        reportedBy: "leader-1",
+        status: "RESOLVED",
+      } as never);
       vi.mocked(issueRepository.updateIssueRepository).mockResolvedValue({} as never);
 
       await updateIssueService("p1", "i1", { status: "OPEN" }, "leader-1");
 
       const savedData = vi.mocked(issueRepository.updateIssueRepository).mock.calls[0][1];
       expect(savedData.resolvedAt).toBeNull();
+    });
+
+    it("lets the reporter (non-leader) edit their own issue's title/description", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(memberMembership as never);
+      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({
+        id: "i1",
+        projectId: "p1",
+        reportedBy: "member-1",
+        status: "OPEN",
+      } as never);
+      vi.mocked(issueRepository.updateIssueRepository).mockResolvedValue({} as never);
+
+      await updateIssueService(
+        "p1",
+        "i1",
+        { title: "Better title", description: "Better description" },
+        "member-1",
+      );
+
+      const savedData = vi.mocked(issueRepository.updateIssueRepository).mock.calls[0][1];
+      expect(savedData).toEqual({ title: "Better title", description: "Better description" });
+    });
+
+    it("ignores status/severity/assignedTo from a reporter who isn't the leader", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(memberMembership as never);
+      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({
+        id: "i1",
+        projectId: "p1",
+        reportedBy: "member-1",
+        status: "OPEN",
+      } as never);
+      vi.mocked(issueRepository.updateIssueRepository).mockResolvedValue({} as never);
+
+      await updateIssueService(
+        "p1",
+        "i1",
+        { title: "Better title", status: "RESOLVED", severity: "CRITICAL" },
+        "member-1",
+      );
+
+      const savedData = vi.mocked(issueRepository.updateIssueRepository).mock.calls[0][1];
+      expect(savedData).toEqual({ title: "Better title" });
+    });
+
+    it("throws 400 when a non-leader reporter tries to edit a resolved issue", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(memberMembership as never);
+      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({
+        id: "i1",
+        projectId: "p1",
+        reportedBy: "member-1",
+        status: "RESOLVED",
+      } as never);
+
+      await expect(
+        updateIssueService("p1", "i1", { title: "Better title" }, "member-1"),
+      ).rejects.toThrow(/resolved|closed/i);
+    });
+
+    it("lets the leader edit title/description even on a resolved issue", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(leaderMembership as never);
+      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({
+        id: "i1",
+        projectId: "p1",
+        reportedBy: "someone-else",
+        status: "RESOLVED",
+      } as never);
+      vi.mocked(issueRepository.updateIssueRepository).mockResolvedValue({} as never);
+
+      await updateIssueService("p1", "i1", { title: "Better title" }, "leader-1");
+
+      const savedData = vi.mocked(issueRepository.updateIssueRepository).mock.calls[0][1];
+      expect(savedData.title).toBe("Better title");
+    });
+  });
+
+  describe("deleteIssueService", () => {
+    it("throws 403 when requester is not a project member at all", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(null as never);
+
+      await expect(deleteIssueService("p1", "i1", "outsider")).rejects.toThrow(AppError);
+    });
+
+    it("throws 404 when issue does not belong to the project", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(leaderMembership as never);
+      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({ id: "i1", projectId: "other" } as never);
+
+      await expect(deleteIssueService("p1", "i1", "leader-1")).rejects.toThrow(AppError);
+    });
+
+    it("throws 403 when requester is a member but neither leader nor the reporter", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(memberMembership as never);
+      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({
+        id: "i1",
+        projectId: "p1",
+        reportedBy: "someone-else",
+      } as never);
+
+      await expect(deleteIssueService("p1", "i1", "member-1")).rejects.toThrow(AppError);
+    });
+
+    it("lets the leader delete any issue", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(leaderMembership as never);
+      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({
+        id: "i1",
+        projectId: "p1",
+        reportedBy: "someone-else",
+      } as never);
+      vi.mocked(issueRepository.deleteIssueRepository).mockResolvedValue({ id: "i1" } as never);
+
+      await deleteIssueService("p1", "i1", "leader-1");
+
+      expect(issueRepository.deleteIssueRepository).toHaveBeenCalledWith("i1");
+    });
+
+    it("lets a reporter delete their own issue", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(memberMembership as never);
+      vi.mocked(issueRepository.findIssueByIdRepository).mockResolvedValue({
+        id: "i1",
+        projectId: "p1",
+        reportedBy: "member-1",
+      } as never);
+      vi.mocked(issueRepository.deleteIssueRepository).mockResolvedValue({ id: "i1" } as never);
+
+      await deleteIssueService("p1", "i1", "member-1");
+
+      expect(issueRepository.deleteIssueRepository).toHaveBeenCalledWith("i1");
     });
   });
 });

@@ -29,3 +29,9 @@ export const updateIssueRepository = async (issueId: string, data: Prisma.IssueU
     data,
   });
 };
+
+export const deleteIssueRepository = async (issueId: string) => {
+  return await prisma.issue.delete({
+    where: { id: issueId },
+  });
+};

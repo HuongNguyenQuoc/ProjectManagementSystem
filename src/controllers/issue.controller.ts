@@ -1,6 +1,11 @@
 import type { Response } from "express";
 import type { AuthRequest } from "../middlewares/requireAuth.js";
-import { createIssueService, listIssuesByProjectService, updateIssueService } from "../services/issue.services.js";
+import {
+  createIssueService,
+  deleteIssueService,
+  listIssuesByProjectService,
+  updateIssueService,
+} from "../services/issue.services.js";
 
 export const createIssueController = async (req: AuthRequest, res: Response) => {
   const issue = await createIssueService(req.params.projectId as string, req.body, req.userId as string);
@@ -30,6 +35,19 @@ export const updateIssueController = async (req: AuthRequest, res: Response) => 
   res.status(200).json({
     success: true,
     message: "Issue updated successfully",
+    data: issue,
+  });
+};
+
+export const deleteIssueController = async (req: AuthRequest, res: Response) => {
+  const issue = await deleteIssueService(
+    req.params.projectId as string,
+    req.params.issueId as string,
+    req.userId as string,
+  );
+  res.status(200).json({
+    success: true,
+    message: "Issue deleted successfully",
     data: issue,
   });
 };

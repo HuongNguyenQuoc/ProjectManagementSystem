@@ -1,0 +1,6 @@
+{
+  // Edge DevTools (webhint) validates tsconfig.json against an outdated JSON
+  // schema whose target/lib enums stop at ES2022, so "es2023" is falsely
+  // flagged. TypeScript 6.x accepts it; tsc -b passes clean.
+  "vscode-edge-devtools.webhint": false
+}

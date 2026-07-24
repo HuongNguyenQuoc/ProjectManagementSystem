@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/nocturne-38060eed-b13f-45f6-93cb-fe7340842618/styles.css">
+<script src="_ds/nocturne-38060eed-b13f-45f6-93cb-fe7340842618/_ds_bundle.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<style>
+  html,body{height:100%;}
+  *::-webkit-scrollbar{width:10px;height:10px;}
+  *::-webkit-scrollbar-thumb{background:var(--color-neutral-800);border-radius:8px;border:2px solid var(--color-bg);}
+  *::-webkit-scrollbar-thumb:hover{background:var(--color-neutral-700);}
+  @keyframes phFade{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+  @keyframes phFadeIn{from{opacity:0;}to{opacity:1;}}
+  @keyframes phScale{from{opacity:0;transform:scale(.96);}to{opacity:1;transform:none;}}
+  @keyframes phSlide{from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:none;}}
+  @keyframes phToast{0%{opacity:0;transform:translateY(12px);}12%{opacity:1;transform:none;}88%{opacity:1;transform:none;}100%{opacity:0;transform:translateY(-6px);}}
+  .ph-screen{animation:phFade .45s cubic-bezier(.22,1,.36,1) both;}
+  .ph-nav-item{transition:background .18s ease,color .18s ease;}
+  .ph-card-lift{transition:transform .22s cubic-bezier(.22,1,.36,1),box-shadow .22s ease;}
+  .ph-card-lift:hover{transform:translateY(-3px);}
+  .ph-task{transition:transform .16s ease,box-shadow .18s ease,opacity .18s ease;}
+  .ph-task:hover{transform:translateY(-2px);}
+  .ph-col-over{background:color-mix(in srgb,var(--color-accent) 9%,transparent)!important;box-shadow:inset 0 0 0 1.5px var(--color-accent)!important;}
+  .ph-row-btn{transition:background .16s ease,color .16s ease;}
+</style>
+</helmet>
+<div style="min-height:100vh; background:radial-gradient(1200px 600px at 82% -8%, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 60%), var(--color-bg); color:var(--color-text); font-family:var(--font-body);">
+
+  <sc-if value="{{ isAuth }}" hint-placeholder-val="{{ true }}">
+    <div class="ph-screen" style="min-height:100vh; display:grid; grid-template-columns:1.05fr .95fr;">
+      <div style="position:relative; overflow:hidden; padding:56px 60px; display:flex; flex-direction:column; justify-content:space-between; background:linear-gradient(155deg, var(--color-section) 0%, var(--color-bg) 78%);">
+        <div style="display:flex; align-items:center; gap:11px;">
+          <div style="width:34px; height:34px; border-radius:9px; background:var(--color-accent); display:grid; place-items:center; color:var(--color-bg);"><i class="ph-fill ph-stack-simple" style="font-size:19px;"></i></div>
+          <span style="font-family:var(--font-heading); font-weight:600; font-size:19px; letter-spacing:-.01em;">ProjectHub</span>
+        </div>
+        <div style="max-width:440px;">
+          <div style="font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--color-accent-300); margin-bottom:18px;">Project Management System</div>
+          <h1 style="font-size:44px; line-height:1.08; margin:0 0 18px; letter-spacing:-.02em;">Ship software the whole team can see.</h1>
+          <p style="font-size:15px; line-height:1.6; color:var(--color-neutral-300); margin:0;">Plan projects, assign tasks, track progress and surface blockers — with role-based access for leaders and members.</p>
+          <div style="display:flex; gap:26px; margin-top:34px;">
+            <div><div style="font-size:26px; font-family:var(--font-heading);">5</div><div style="font-size:12px; color:var(--color-neutral-400);">Active projects</div></div>
+            <div><div style="font-size:26px; font-family:var(--font-heading);">6</div><div style="font-size:12px; color:var(--color-neutral-400);">Team members</div></div>
+            <div><div style="font-size:26px; font-family:var(--font-heading);">42</div><div style="font-size:12px; color:var(--color-neutral-400);">Tasks tracked</div></div>
+          </div>
+        </div>
+        <div style="font-size:12px; color:var(--color-neutral-500);">Two roles · Project Leader &amp; Member</div>
+        <div style="position:absolute; right:-140px; bottom:-160px; width:420px; height:420px; border-radius:50%; background:radial-gradient(circle, color-mix(in srgb, var(--color-accent) 26%, transparent), transparent 62%); filter:blur(6px);"></div>
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:center; padding:40px;">
+        <div style="width:min(400px,100%);">
+          <h2 style="font-size:27px; margin:0 0 6px;">{{ authTitle }}</h2>
+          <p style="font-size:14px; color:var(--color-neutral-400); margin:0 0 26px;">{{ authSubtitle }}</p>
+
+          <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
+            <div class="field" style="margin-bottom:14px;"><label>Full name</label><input class="input" data-field="fullName" value="{{ draft.fullName }}" oninput="{{ onField }}" placeholder="Jane Cooper"></div>
+          </sc-if>
+          <div class="field" style="margin-bottom:14px;"><label>Email</label><input class="input" data-field="email" value="{{ draft.email }}" oninput="{{ onField }}" placeholder="you@company.com"></div>
+          <div class="field" style="margin-bottom:8px;"><label>Password</label><input class="input" type="password" data-field="password" value="{{ draft.password }}" oninput="{{ onField }}" placeholder="••••••••"></div>
+
+          <div style="display:flex; align-items:center; justify-content:space-between; margin:14px 0 20px;">
+            <span style="font-size:13px; color:var(--color-neutral-400);">Sign in as</span>
+            <div class="seg">
+              <label class="seg-opt"><input type="radio" name="authrole" data-role="LEADER" checked="{{ pickLeader }}" onchange="{{ onAuthRole }}"><i class="ph ph-crown-simple"></i>Leader</label>
+              <label class="seg-opt"><input type="radio" name="authrole" data-role="MEMBER" checked="{{ pickMember }}" onchange="{{ onAuthRole }}"><i class="ph ph-user"></i>Member</label>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-block" onclick="{{ doAuth }}" style="height:42px; white-space:nowrap;">{{ authCta }} <i class="ph-bold ph-arrow-right"></i></button>
+
+          <div style="text-align:center; font-size:13px; color:var(--color-neutral-400); margin-top:20px;">
+            {{ authSwitchLabel }} <a href="#" onclick="{{ toggleAuthMode }}" style="font-family:var(--font-heading);">{{ authSwitchCta }}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex; min-height:100vh;">
+
+      <aside style="width:236px; flex:none; border-right:1px solid var(--color-divider); display:flex; flex-direction:column; padding:18px 14px; position:sticky; top:0; height:100vh;">
+        <div style="display:flex; align-items:center; gap:10px; padding:6px 8px 20px;">
+          <div style="width:30px; height:30px; border-radius:8px; background:var(--color-accent); display:grid; place-items:center; color:var(--color-bg);"><i class="ph-fill ph-stack-simple" style="font-size:17px;"></i></div>
+          <span style="font-family:var(--font-heading); font-weight:600; font-size:17px;">ProjectHub</span>
+        </div>
+
+        <nav style="display:flex; flex-direction:column; gap:2px;">
+          <sc-for list="{{ navItems }}" as="item" hint-placeholder-count="5">
+            <a href="#" class="ph-nav-item" data-screen="{{ item.screen }}" onclick="{{ onNav }}" aria-current="{{ item.current }}" style="{{ item.style }}">
+              <i class="{{ item.iconClass }}" style="font-size:18px; width:20px; text-align:center;"></i>
+              <span>{{ item.label }}</span>
+              <sc-if value="{{ item.badge }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto; font-size:11px; background:var(--color-neutral-800); color:var(--color-neutral-200); padding:1px 7px; border-radius:20px;">{{ item.badge }}</span></sc-if>
+            </a>
+          </sc-for>
+        </nav>
+
+        <div style="margin-top:auto; border-top:1px solid var(--color-divider); padding-top:14px; display:flex; align-items:center; gap:10px;">
+          <div style="width:34px; height:34px; border-radius:50%; background:var(--color-accent-800); color:var(--color-accent-100); display:grid; place-items:center; font-size:13px; font-family:var(--font-heading);">{{ currentUser.initials }}</div>
+          <div style="min-width:0;">
+            <div style="font-size:13px; font-family:var(--font-heading); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ currentUser.name }}</div>
+            <div style="font-size:11px; color:var(--color-accent-300);">{{ roleLabel }}</div>
+          </div>
+          <button class="btn btn-icon" onclick="{{ logout }}" title="Sign out" style="margin-left:auto; width:30px; height:30px;"><i class="ph ph-sign-out"></i></button>
+        </div>
+      </aside>
+
+      <main style="flex:1; min-width:0; display:flex; flex-direction:column;">
+        <header style="height:60px; flex:none; border-bottom:1px solid var(--color-divider); display:flex; align-items:center; gap:16px; padding:0 26px; position:sticky; top:0; background:color-mix(in srgb, var(--color-bg) 82%, transparent); backdrop-filter:blur(10px); z-index:20;">
+          <div>
+            <div style="font-family:var(--font-heading); font-size:17px; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:360px;">{{ pageTitle }}</div>
+            <div style="font-size:12px; color:var(--color-neutral-400);">{{ pageSubtitle }}</div>
+          </div>
+          <div style="margin-left:auto; display:flex; align-items:center; gap:14px;">
+            <div style="display:flex; align-items:center; background:var(--color-surface); border:1px solid var(--color-divider); border-radius:8px; padding:0 10px; height:36px; width:220px;">
+              <i class="ph ph-magnifying-glass" style="color:var(--color-neutral-400); font-size:15px;"></i>
+              <input placeholder="Search…" style="border:0; background:transparent; color:var(--color-text); font:inherit; font-size:13px; outline:none; width:100%; padding-left:8px;">
+            </div>
+            <div class="seg">
+              <label class="seg-opt"><input type="radio" name="rolesw" data-role="LEADER" checked="{{ isLeaderRole }}" onchange="{{ onRoleSwitch }}"><i class="ph ph-crown-simple"></i>Leader</label>
+              <label class="seg-opt"><input type="radio" name="rolesw" data-role="MEMBER" checked="{{ isMemberRole }}" onchange="{{ onRoleSwitch }}"><i class="ph ph-user"></i>Member</label>
+            </div>
+          </div>
+        </header>
+
+        <div style="flex:1; overflow-y:auto; padding:28px 30px 60px;">
+
+          <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ false }}">
+            <div class="ph-screen" style="max-width:1180px;">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                <select data-field="activeProjectId" onchange="{{ onSwitchProject }}" class="input" style="width:auto; min-width:240px; font-family:var(--font-heading); font-size:15px;">
+                  <sc-for list="{{ projectOptions }}" as="opt" hint-placeholder-count="4"><option value="{{ opt.id }}" selected="{{ opt.selected }}">{{ opt.name }}</option></sc-for>
+                </select>
+                <span class="tag" style="{{ activeProject.statusTag }}">{{ activeProject.statusLabel }}</span>
+              </div>
+
+              <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:16px;">
+                <sc-for list="{{ statCards }}" as="s" hint-placeholder-count="4">
+                  <div class="card ph-card-lift elev-sm" style="gap:10px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                      <span style="font-size:12px; color:var(--color-neutral-400); white-space:nowrap;">{{ s.label }}</span>
+                      <div style="width:30px; height:30px; border-radius:8px; display:grid; place-items:center; {{ s.iconStyle }}"><i class="{{ s.iconClass }}" style="font-size:16px;"></i></div>
+                    </div>
+                    <div style="font-size:32px; font-family:var(--font-heading); line-height:1;">{{ s.value }}</div>
+                    <div style="font-size:12px; color:{{ s.subColor }};">{{ s.sub }}</div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="display:grid; grid-template-columns:280px 1fr; gap:16px; margin-bottom:16px;">
+                <div class="card elev-sm" style="align-items:center; gap:14px;">
+                  <div style="font-size:13px; align-self:flex-start; color:var(--color-neutral-300); font-family:var(--font-heading);">Overall progress</div>
+                  {{ progressRing }}
+                  <div style="font-size:12px; color:var(--color-neutral-400); text-align:center;">{{ activeProject.completedTask }} of {{ activeProject.totalTask }} tasks done</div>
+                </div>
+                <div class="card elev-sm">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:10px;"><div style="font-size:13px; color:var(--color-neutral-300); font-family:var(--font-heading); white-space:nowrap;">Tasks by status</div><span style="font-size:11px; color:var(--color-neutral-500);">{{ activeProject.totalTask }} total</span></div>
+                  {{ statusChart }}
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                <div class="card elev-sm">
+                  <div style="font-size:13px; color:var(--color-neutral-300); font-family:var(--font-heading); margin-bottom:10px;">Tasks by priority</div>
+                  {{ priorityChart }}
+                </div>
+                <div class="card elev-sm">
+                  <div style="font-size:13px; color:var(--color-neutral-300); font-family:var(--font-heading); margin-bottom:10px;">Issues by severity</div>
+                  {{ severityChart }}
+                </div>
+              </div>
+
+              <div class="card elev-sm">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"><div style="font-size:13px; color:var(--color-neutral-300); font-family:var(--font-heading);">Timeline</div><span style="font-size:11px; color:var(--color-neutral-500);">Project schedule (Gantt)</span></div>
+                {{ ganttChart }}
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isProjects }}" hint-placeholder-val="{{ false }}">
+            <div class="ph-screen">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+                <div class="seg">
+                  <label class="seg-opt"><input type="radio" name="projview" data-view="grid" checked="{{ projGrid }}" onchange="{{ onProjView }}"><i class="ph ph-squares-four"></i>Cards</label>
+                  <label class="seg-opt"><input type="radio" name="projview" data-view="table" checked="{{ projTable }}" onchange="{{ onProjView }}"><i class="ph ph-rows"></i>Table</label>
+                </div>
+                <span style="font-size:13px; color:var(--color-neutral-400);">{{ projectCount }} projects</span>
+                <sc-if value="{{ isLeaderRole }}" hint-placeholder-val="{{ true }}">
+                  <button class="btn btn-primary" style="margin-left:auto;" onclick="{{ openNewProject }}"><i class="ph-bold ph-plus"></i>New project</button>
+                </sc-if>
+              </div>
+
+              <sc-if value="{{ projGrid }}" hint-placeholder-val="{{ true }}">
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
+                  <sc-for list="{{ projects }}" as="p" hint-placeholder-count="6">
+                    <div class="card ph-card-lift elev-sm" data-id="{{ p.id }}" onclick="{{ openProject }}" style="cursor:pointer; gap:12px;">
+                      <div style="display:flex; align-items:flex-start; justify-content:space-between;">
+                        <div style="width:38px; height:38px; border-radius:9px; display:grid; place-items:center; {{ p.iconStyle }}"><i class="{{ p.iconClass }}" style="font-size:19px;"></i></div>
+                        <span class="tag" style="{{ p.statusTag }}">{{ p.statusLabel }}</span>
+                      </div>
+                      <div>
+                        <div style="font-family:var(--font-heading); font-size:16px; margin-bottom:2px;">{{ p.name }}</div>
+                        <div style="font-size:12px; color:var(--color-neutral-400);">{{ p.typeLabel }}</div>
+                      </div>
+                      <div style="display:flex; align-items:center; justify-content:space-between; font-size:12px;">
+                        <span style="color:var(--color-neutral-400);">{{ p.completedTask }}/{{ p.totalTask }} tasks</span>
+                        <span style="font-family:var(--font-heading); color:var(--color-text);">{{ p.progress }}%</span>
+                      </div>
+                      <div style="height:6px; border-radius:6px; background:var(--color-neutral-800); overflow:hidden;"><div style="{{ p.barStyle }}"></div></div>
+                      <div class="card-meta" style="justify-content:space-between; padding-top:2px;">
+                        <span style="display:flex; align-items:center; gap:6px;"><span style="width:22px; height:22px; border-radius:50%; background:var(--color-accent-800); color:var(--color-accent-100); display:grid; place-items:center; font-size:10px;">{{ p.leaderInitials }}</span>{{ p.leaderName }}</span>
+                        <span><i class="ph ph-calendar-blank"></i> {{ p.deadlineLabel }}</span>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ projTable }}" hint-placeholder-val="{{ false }}">
+                <div class="card elev-sm" style="padding:6px 10px;">
+                  <table class="table">
+                    <thead><tr><th>Project</th><th>Type</th><th>Leader</th><th>Tasks</th><th style="width:150px;">Progress</th><th>Deadline</th><th>Status</th></tr></thead>
+                    <tbody>
+                      <sc-for list="{{ projects }}" as="p" hint-placeholder-count="5">
+                        <tr class="ph-row-btn" data-id="{{ p.id }}" onclick="{{ openProject }}" style="cursor:pointer;">
+                          <td style="font-family:var(--font-heading);">{{ p.name }}</td>
+                          <td style="color:var(--color-neutral-400);">{{ p.typeLabel }}</td>
+                          <td>{{ p.leaderName }}</td>
+                          <td>{{ p.completedTask }}/{{ p.totalTask }}</td>
+                          <td><div style="display:flex; align-items:center; gap:8px;"><div style="flex:1; height:6px; border-radius:6px; background:var(--color-neutral-800); overflow:hidden;"><div style="{{ p.barStyle }}"></div></div><span style="font-size:12px; width:32px;">{{ p.progress }}%</span></div></td>
+                          <td style="color:var(--color-neutral-400);">{{ p.deadlineLabel }}</td>
+                          <td><span class="tag" style="{{ p.statusTag }}">{{ p.statusLabel }}</span></td>
+                        </tr>
+                      </sc-for>
+                    </tbody>
+                  </table>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isProjectDetail }}" hint-placeholder-val="{{ false }}">
+            <div class="ph-screen">
+              <a href="#" onclick="{{ backToProjects }}" style="font-size:13px; color:var(--color-neutral-400); text-decoration:none; display:inline-flex; align-items:center; gap:5px; margin-bottom:14px;"><i class="ph ph-arrow-left"></i> All projects</a>
+              <div style="display:flex; align-items:flex-start; gap:16px; margin-bottom:22px;">
+                <div style="width:52px; height:52px; border-radius:12px; display:grid; place-items:center; {{ activeProject.iconStyle }}"><i class="{{ activeProject.iconClass }}" style="font-size:26px;"></i></div>
+                <div style="flex:1;">
+                  <div style="display:flex; align-items:center; gap:10px;"><h2 style="margin:0; font-size:26px;">{{ activeProject.name }}</h2><span class="tag" style="{{ activeProject.statusTag }}">{{ activeProject.statusLabel }}</span></div>
+                  <div style="font-size:13px; color:var(--color-neutral-400); margin-top:4px; max-width:640px;">{{ activeProject.description }}</div>
+                </div>
+                <sc-if value="{{ isLeaderRole }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex; gap:8px;">
+                    <button class="btn btn-secondary" onclick="{{ openEditProject }}"><i class="ph ph-pencil-simple"></i>Edit</button>
+                    <button class="btn btn-primary" onclick="{{ openNewTask }}"><i class="ph-bold ph-plus"></i>Add task</button>
+                  </div>
+                </sc-if>
+              </div>
+
+              <div style="display:flex; align-items:center; gap:2px; border-bottom:1px solid var(--color-divider); margin-bottom:20px;">
+                <sc-for list="{{ projectTabs }}" as="t" hint-placeholder-count="4">
+                  <a href="#" class="ph-nav-item" data-tab="{{ t.key }}" onclick="{{ onProjectTab }}" style="{{ t.style }}"><i class="{{ t.iconClass }}"></i> {{ t.label }} <sc-if value="{{ t.count }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px; color:var(--color-neutral-500);">{{ t.count }}</span></sc-if></a>
+                </sc-for>
+                <sc-if value="{{ isBoardTab }}" hint-placeholder-val="{{ true }}">
+                  <div class="seg" style="margin-left:auto;">
+                    <label class="seg-opt"><input type="radio" name="bview" data-view="kanban" checked="{{ isKanban }}" onchange="{{ onBoardView }}"><i class="ph ph-kanban"></i>Board</label>
+                    <label class="seg-opt"><input type="radio" name="bview" data-view="table" checked="{{ isBoardTable }}" onchange="{{ onBoardView }}"><i class="ph ph-list-checks"></i>List</label>
+                  </div>
+                </sc-if>
+              </div>
+
+              <sc-if value="{{ showKanban }}" hint-placeholder-val="{{ true }}">
+                <div style="display:grid; grid-template-columns:repeat(5,minmax(210px,1fr)); gap:12px; align-items:start;">
+                  <sc-for list="{{ columns }}" as="col" hint-placeholder-count="5">
+                    <div data-status="{{ col.key }}" ondragover="{{ onDragOver }}" ondragleave="{{ onDragLeave }}" ondrop="{{ onDrop }}" style="background:var(--color-surface); border-radius:12px; padding:10px; min-height:120px; transition:box-shadow .15s ease, background .15s ease;">
+                      <div style="display:flex; align-items:center; gap:8px; padding:2px 4px 10px;">
+                        <span style="width:9px; height:9px; border-radius:50%; background:{{ col.color }};"></span>
+                        <span style="font-size:12px; font-family:var(--font-heading); text-transform:uppercase; letter-spacing:.05em; white-space:nowrap;">{{ col.label }}</span>
+                        <span style="margin-left:auto; font-size:11px; color:var(--color-neutral-500); background:var(--color-neutral-900); padding:1px 8px; border-radius:20px;">{{ col.count }}</span>
+                      </div>
+                      <div style="display:flex; flex-direction:column; gap:9px;">
+                        <sc-for list="{{ col.tasks }}" as="task" hint-placeholder-count="2">
+                          <div class="ph-task elev-sm" draggable="true" data-id="{{ task.id }}" ondragstart="{{ onDragStart }}" ondragend="{{ onDragEnd }}" onclick="{{ openTask }}" style="background:var(--color-bg); border-radius:9px; padding:11px; cursor:pointer; border-left:3px solid {{ task.priorityColor }};">
+                            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:7px;"><span style="font-size:10px; color:var(--color-neutral-500);">{{ task.code }}</span><span class="tag" style="{{ task.priorityTag }}">{{ task.priorityLabel }}</span></div>
+                            <div style="font-size:13px; line-height:1.35; margin-bottom:9px;">{{ task.title }}</div>
+                            <div style="height:5px; border-radius:5px; background:var(--color-neutral-800); overflow:hidden; margin-bottom:9px;"><div style="{{ task.barStyle }}"></div></div>
+                            <div style="display:flex; align-items:center; justify-content:space-between;">
+                              <span style="display:flex; align-items:center; gap:5px; font-size:11px; color:var(--color-neutral-400);"><i class="ph ph-calendar-blank"></i>{{ task.dueLabel }}</span>
+                              <span title="{{ task.assigneeName }}" style="width:22px; height:22px; border-radius:50%; {{ task.avatarStyle }} display:grid; place-items:center; font-size:9px; font-family:var(--font-heading);">{{ task.assigneeInitials }}</span>
+                            </div>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ showBoardTable }}" hint-placeholder-val="{{ false }}">
+                <div class="card elev-sm" style="padding:6px 10px;">
+                  <table class="table">
+                    <thead><tr><th>Task</th><th>Assignee</th><th>Priority</th><th>Status</th><th style="width:130px;">Progress</th><th>Due</th></tr></thead>
+                    <tbody>
+                      <sc-for list="{{ boardRows }}" as="task" hint-placeholder-count="6">
+                        <tr class="ph-row-btn" data-id="{{ task.id }}" onclick="{{ openTask }}" style="cursor:pointer;">
+                          <td><div style="font-family:var(--font-heading);">{{ task.title }}</div><div style="font-size:11px; color:var(--color-neutral-500);">{{ task.code }}</div></td>
+                          <td><span style="display:flex; align-items:center; gap:7px;"><span style="width:22px; height:22px; border-radius:50%; {{ task.avatarStyle }} display:grid; place-items:center; font-size:9px;">{{ task.assigneeInitials }}</span>{{ task.assigneeName }}</span></td>
+                          <td><span class="tag" style="{{ task.priorityTag }}">{{ task.priorityLabel }}</span></td>
+                          <td><span style="display:inline-flex; align-items:center; gap:6px; font-size:13px;"><span style="width:8px; height:8px; border-radius:50%; background:{{ task.statusColor }};"></span>{{ task.statusLabel }}</span></td>
+                          <td><div style="display:flex; align-items:center; gap:7px;"><div style="flex:1; height:6px; border-radius:6px; background:var(--color-neutral-800); overflow:hidden;"><div style="{{ task.barStyle }}"></div></div><span style="font-size:12px; width:30px;">{{ task.progress }}%</span></div></td>
+                          <td style="color:var(--color-neutral-400);">{{ task.dueLabel }}</td>
+                        </tr>
+                      </sc-for>
+                    </tbody>
+                  </table>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ isIssuesTab }}" hint-placeholder-val="{{ false }}">
+                <div>
+                  <div style="display:flex; align-items:center; margin-bottom:14px;"><span style="font-size:13px; color:var(--color-neutral-400);">{{ issueCount }} issues reported</span><button class="btn btn-primary" style="margin-left:auto;" onclick="{{ openNewIssue }}"><i class="ph-bold ph-plus"></i>Report issue</button></div>
+                  <div class="card elev-sm" style="padding:6px 10px;">
+                    <table class="table">
+                      <thead><tr><th>Issue</th><th>Related task</th><th>Severity</th><th>Status</th><th>Reporter</th><th>Assignee</th></tr></thead>
+                      <tbody>
+                        <sc-for list="{{ issues }}" as="iss" hint-placeholder-count="4">
+                          <tr>
+                            <td><div style="font-family:var(--font-heading);">{{ iss.title }}</div><div style="font-size:11px; color:var(--color-neutral-500); max-width:280px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ iss.description }}</div></td>
+                            <td style="color:var(--color-neutral-400);">{{ iss.taskTitle }}</td>
+                            <td><span class="tag" style="{{ iss.severityTag }}">{{ iss.severityLabel }}</span></td>
+                            <td><span style="display:inline-flex; align-items:center; gap:6px; font-size:13px;"><span style="width:8px; height:8px; border-radius:50%; background:{{ iss.statusColor }};"></span>{{ iss.statusLabel }}</span></td>
+                            <td>{{ iss.reporterName }}</td>
+                            <td style="color:var(--color-neutral-400);">{{ iss.assigneeName }}</td>
+                          </tr>
+                        </sc-for>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ isMembersTab }}" hint-placeholder-val="{{ false }}">
+                <div>
+                  <div style="display:flex; align-items:center; margin-bottom:14px;"><span style="font-size:13px; color:var(--color-neutral-400);">{{ memberCount }} members</span><sc-if value="{{ isLeaderRole }}" hint-placeholder-val="{{ true }}"><button class="btn btn-primary" style="margin-left:auto;" onclick="{{ openAddMember }}"><i class="ph-bold ph-plus"></i>Add member</button></sc-if></div>
+                  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px;">
+                    <sc-for list="{{ members }}" as="m" hint-placeholder-count="6">
+                      <div class="card ph-card-lift elev-sm" style="flex-direction:row; align-items:center; gap:12px;">
+                        <span style="width:44px; height:44px; border-radius:50%; {{ m.avatarStyle }} display:grid; place-items:center; font-size:15px; font-family:var(--font-heading);">{{ m.initials }}</span>
+                        <div style="min-width:0; flex:1;">
+                          <div style="display:flex; align-items:center; gap:7px;"><span style="font-family:var(--font-heading); font-size:15px;">{{ m.name }}</span><sc-if value="{{ m.isLeader }}" hint-placeholder-val="{{ false }}"><i class="ph-fill ph-crown-simple" style="color:var(--color-accent); font-size:13px;" title="Leader"></i></sc-if></div>
+                          <div style="font-size:12px; color:var(--color-neutral-400);">{{ m.positionLabel }}</div>
+                          <div style="font-size:11px; color:var(--color-neutral-500); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ m.email }}</div>
+                        </div>
+                        <span class="tag" style="{{ m.roleTag }}">{{ m.taskCount }} tasks</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isMyTasks }}" hint-placeholder-val="{{ false }}">
+            <div class="ph-screen" style="max-width:900px;">
+              <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:22px;">
+                <sc-for list="{{ myStats }}" as="s" hint-placeholder-count="3">
+                  <div class="card elev-sm" style="gap:6px;"><div style="font-size:12px; color:var(--color-neutral-400);">{{ s.label }}</div><div style="font-size:28px; font-family:var(--font-heading);">{{ s.value }}</div></div>
+                </sc-for>
+              </div>
+              <div style="font-size:13px; color:var(--color-neutral-300); font-family:var(--font-heading); margin-bottom:12px;">Assigned to you</div>
+              <div style="display:flex; flex-direction:column; gap:11px;">
+                <sc-for list="{{ myTasks }}" as="task" hint-placeholder-count="4">
+                  <div class="card ph-card-lift elev-sm" data-id="{{ task.id }}" onclick="{{ openTask }}" style="cursor:pointer; flex-direction:row; align-items:center; gap:16px; border-left:3px solid {{ task.priorityColor }};">
+                    <div style="flex:1;">
+                      <div style="display:flex; align-items:center; gap:9px; margin-bottom:5px;"><span style="font-family:var(--font-heading); font-size:15px;">{{ task.title }}</span><span class="tag" style="{{ task.priorityTag }}">{{ task.priorityLabel }}</span></div>
+                      <div style="font-size:12px; color:var(--color-neutral-400);">{{ task.projectName }} · Due {{ task.dueLabel }}</div>
+                    </div>
+                    <div style="width:130px;"><div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px; color:var(--color-neutral-400);"><span>{{ task.statusLabel }}</span><span>{{ task.progress }}%</span></div><div style="height:6px; border-radius:6px; background:var(--color-neutral-800); overflow:hidden;"><div style="{{ task.barStyle }}"></div></div></div>
+                    <i class="ph ph-caret-right" style="color:var(--color-neutral-500);"></i>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+        </div>
+      </main>
+
+      <sc-if value="{{ taskOpen }}" hint-placeholder-val="{{ false }}">
+        <div onclick="{{ closeTask }}" style="position:fixed; inset:0; background:color-mix(in srgb, var(--color-neutral-900) 55%, transparent); z-index:40; animation:phFadeIn .2s ease both;"></div>
+        <div style="position:fixed; top:0; right:0; height:100vh; width:min(480px,100%); background:var(--color-surface); box-shadow:var(--shadow-lg); z-index:41; display:flex; flex-direction:column; animation:phSlide .32s cubic-bezier(.22,1,.36,1) both;">
+          <div style="padding:20px 22px; border-bottom:1px solid var(--color-divider); display:flex; align-items:flex-start; gap:12px;">
+            <div style="flex:1;">
+              <div style="font-size:11px; color:var(--color-neutral-500); margin-bottom:5px;">{{ selectedTask.code }} · {{ selectedTask.projectName }}</div>
+              <div style="font-size:19px; font-family:var(--font-heading); line-height:1.25;">{{ selectedTask.title }}</div>
+            </div>
+            <button class="btn btn-icon" onclick="{{ closeTask }}"><i class="ph ph-x"></i></button>
+          </div>
+          <div style="flex:1; overflow-y:auto; padding:22px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;">
+              <span class="tag" style="{{ selectedTask.priorityTag }}white-space:nowrap;">{{ selectedTask.priorityLabel }}</span>
+              <span class="tag tag-neutral" style="white-space:nowrap;"><span style="width:7px; height:7px; border-radius:50%; background:{{ selectedTask.statusColor }}; margin-right:6px; display:inline-block;"></span>{{ selectedTask.statusLabel }}</span>
+            </div>
+            <p style="font-size:14px; line-height:1.6; color:var(--color-neutral-300);">{{ selectedTask.description }}</p>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:20px 0; font-size:13px;">
+              <div><div style="color:var(--color-neutral-500); font-size:11px; margin-bottom:4px;">Assignee</div><span style="display:flex; align-items:center; gap:8px;"><span style="width:26px; height:26px; border-radius:50%; {{ selectedTask.avatarStyle }} display:grid; place-items:center; font-size:10px;">{{ selectedTask.assigneeInitials }}</span>{{ selectedTask.assigneeName }}</span></div>
+              <div><div style="color:var(--color-neutral-500); font-size:11px; margin-bottom:4px;">Due date</div><span><i class="ph ph-calendar-blank"></i> {{ selectedTask.dueLabel }}</span></div>
+            </div>
+
+            <div style="margin:20px 0;">
+              <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:8px;"><span style="color:var(--color-neutral-300); font-family:var(--font-heading);">Progress</span><span style="font-family:var(--font-heading); color:var(--color-accent-300);">{{ selectedTask.progress }}%</span></div>
+              <input type="range" min="0" max="100" step="5" value="{{ selectedTask.progress }}" oninput="{{ onProgress }}" style="width:100%; accent-color:var(--color-accent);">
+              <div style="font-size:11px; color:var(--color-neutral-500); margin-top:6px;">Drag to update — assignees and the leader can move progress.</div>
+            </div>
+
+            <sc-if value="{{ isLeaderRole }}" hint-placeholder-val="{{ true }}">
+              <div style="margin:20px 0;">
+                <div style="color:var(--color-neutral-300); font-family:var(--font-heading); font-size:12px; margin-bottom:8px;">Status</div>
+                <div style="display:flex; flex-wrap:wrap; gap:7px;">
+                  <sc-for list="{{ statusOptions }}" as="so" hint-placeholder-count="5">
+                    <button class="ph-row-btn" data-status="{{ so.key }}" onclick="{{ onSetStatus }}" style="{{ so.style }}"><span style="width:7px; height:7px; border-radius:50%; background:{{ so.color }};"></span>{{ so.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <div style="border-top:1px solid var(--color-divider); margin-top:22px; padding-top:18px;">
+              <div style="font-size:13px; color:var(--color-neutral-300); font-family:var(--font-heading); margin-bottom:14px;">Comments <span style="color:var(--color-neutral-500);">{{ commentCount }}</span></div>
+              <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:16px;">
+                <sc-for list="{{ comments }}" as="c" hint-placeholder-count="2">
+                  <div style="display:flex; gap:10px;">
+                    <span style="width:30px; height:30px; flex:none; border-radius:50%; {{ c.avatarStyle }} display:grid; place-items:center; font-size:11px; font-family:var(--font-heading);">{{ c.initials }}</span>
+                    <div style="flex:1;">
+                      <div style="display:flex; align-items:baseline; gap:8px;"><span style="font-size:13px; font-family:var(--font-heading);">{{ c.authorName }}</span><span style="font-size:11px; color:var(--color-neutral-500);">{{ c.timeLabel }}</span></div>
+                      <div style="font-size:13px; color:var(--color-neutral-300); line-height:1.5; margin-top:2px;">{{ c.content }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex; gap:8px; align-items:flex-end;">
+                <textarea class="input" data-field="commentDraft" value="{{ commentDraft }}" oninput="{{ onField }}" placeholder="Add a comment…" style="min-height:44px; height:44px;"></textarea>
+                <button class="btn btn-primary" onclick="{{ addComment }}" style="height:44px; flex:none;"><i class="ph-bold ph-paper-plane-tilt"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+        <div onclick="{{ closeModal }}" class="dialog-backdrop" style="z-index:50; animation:phFadeIn .2s ease both;">
+          <div class="dialog" onclick="{{ stop }}" style="width:min(520px,100%); animation:phScale .28s cubic-bezier(.22,1,.36,1) both;">
+            <div style="display:flex; align-items:center; justify-content:space-between;"><div class="dialog-title">{{ modalTitle }}</div><button class="btn btn-icon" onclick="{{ closeModal }}"><i class="ph ph-x"></i></button></div>
+
+            <sc-if value="{{ isProjectModal }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex; flex-direction:column; gap:13px; margin-top:4px;">
+                <div class="field"><label>Project name</label><input class="input" data-field="name" value="{{ draft.name }}" oninput="{{ onField }}" placeholder="e.g. Nova Payments Platform"></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                  <div class="field"><label>Type</label><select class="input" data-field="projectType" value="{{ draft.projectType }}" onchange="{{ onField }}"><sc-for list="{{ typeOptions }}" as="o" hint-placeholder-count="6"><option value="{{ o.key }}" selected="{{ o.selected }}">{{ o.label }}</option></sc-for></select></div>
+                  <div class="field"><label>Status</label><select class="input" data-field="status" value="{{ draft.status }}" onchange="{{ onField }}"><sc-for list="{{ statusSelOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.key }}" selected="{{ o.selected }}">{{ o.label }}</option></sc-for></select></div>
+                </div>
+                <div class="field"><label>Description</label><textarea class="input" data-field="description" value="{{ draft.description }}" oninput="{{ onField }}" placeholder="What is this project about?"></textarea></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                  <div class="field"><label>Start date</label><input class="input" type="date" data-field="startDate" value="{{ draft.startDate }}" oninput="{{ onField }}"></div>
+                  <div class="field"><label>End date</label><input class="input" type="date" data-field="endDate" value="{{ draft.endDate }}" oninput="{{ onField }}"></div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isTaskModal }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:13px; margin-top:4px;">
+                <div class="field"><label>Task title</label><input class="input" data-field="title" value="{{ draft.title }}" oninput="{{ onField }}" placeholder="e.g. Build login endpoint"></div>
+                <div class="field"><label>Description</label><textarea class="input" data-field="description" value="{{ draft.description }}" oninput="{{ onField }}" placeholder="Details…"></textarea></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                  <div class="field"><label>Priority</label><select class="input" data-field="priority" value="{{ draft.priority }}" onchange="{{ onField }}"><sc-for list="{{ priorityOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.key }}" selected="{{ o.selected }}">{{ o.label }}</option></sc-for></select></div>
+                  <div class="field"><label>Assignee</label><select class="input" data-field="assigneeId" value="{{ draft.assigneeId }}" onchange="{{ onField }}"><sc-for list="{{ assigneeOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.key }}" selected="{{ o.selected }}">{{ o.label }}</option></sc-for></select></div>
+                </div>
+                <div class="field"><label>Due date</label><input class="input" type="date" data-field="dueDate" value="{{ draft.dueDate }}" oninput="{{ onField }}"></div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isIssueModal }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:13px; margin-top:4px;">
+                <div class="field"><label>Issue title</label><input class="input" data-field="title" value="{{ draft.title }}" oninput="{{ onField }}" placeholder="e.g. Login fails on Safari"></div>
+                <div class="field"><label>Description</label><textarea class="input" data-field="description" value="{{ draft.description }}" oninput="{{ onField }}" placeholder="Steps to reproduce…"></textarea></div>
+                <div class="field"><label>Severity</label><select class="input" data-field="severity" value="{{ draft.severity }}" onchange="{{ onField }}"><sc-for list="{{ severityOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.key }}" selected="{{ o.selected }}">{{ o.label }}</option></sc-for></select></div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isMemberModal }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:13px; margin-top:4px;">
+                <div class="field"><label>Team member</label><select class="input" data-field="memberUserId" value="{{ draft.memberUserId }}" onchange="{{ onField }}"><sc-for list="{{ userOptions }}" as="o" hint-placeholder-count="4"><option value="{{ o.key }}" selected="{{ o.selected }}">{{ o.label }}</option></sc-for></select></div>
+                <div class="field"><label>Position</label><select class="input" data-field="memberPosition" value="{{ draft.memberPosition }}" onchange="{{ onField }}"><sc-for list="{{ positionOptions }}" as="o" hint-placeholder-count="5"><option value="{{ o.key }}" selected="{{ o.selected }}">{{ o.label }}</option></sc-for></select></div>
+              </div>
+            </sc-if>
+
+            <div class="dialog-actions">
+              <button class="btn btn-secondary" onclick="{{ closeModal }}">Cancel</button>
+              <button class="btn btn-primary" onclick="{{ submitModal }}">{{ modalCta }}</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+        <div style="position:fixed; bottom:26px; left:50%; transform:translateX(-50%); z-index:60; background:var(--color-surface); box-shadow:var(--shadow-lg); border-radius:10px; padding:11px 18px; display:flex; align-items:center; gap:10px; font-size:14px; animation:phToast 2.6s ease forwards;">
+          <i class="ph-fill ph-check-circle" style="color:oklch(.72 .13 150); font-size:18px;"></i>{{ toast }}
+        </div>
+      </sc-if>
+
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{},&quot;defaultRole&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Leader&quot;,&quot;Member&quot;],&quot;default&quot;:&quot;Leader&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;startSignedIn&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#e0a878&quot;,&quot;options&quot;:[&quot;#9184d9&quot;,&quot;#7bb0e0&quot;,&quot;#8fd0a8&quot;,&quot;#e0a878&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Theme&quot;}}">
+class Component extends DCLogic {
+  USERS = [
+    { id: "u1", name: "Huong Nguyen", email: "huong@nocturne.dev" },
+    { id: "u2", name: "Minh Tran", email: "minh@nocturne.dev" },
+    { id: "u3", name: "Lan Pham", email: "lan@nocturne.dev" },
+    { id: "u4", name: "Duc Le", email: "duc@nocturne.dev" },
+    { id: "u5", name: "Thao Vo", email: "thao@nocturne.dev" },
+    { id: "u6", name: "Nam Hoang", email: "nam@nocturne.dev" },
+  ];
+  PROJECTS = [
+    { id: "p1", name: "Nocturne CRM Platform", projectType: "WEB", status: "IN_PROGRESS", description: "Customer relationship platform with pipelines, contacts and reporting. Web-first, React + Node.", startDate: "2026-05-04", endDate: "2026-09-30", leaderId: "u1" },
+    { id: "p2", name: "Aurora Mobile Banking", projectType: "MOBILE_APP", status: "IN_PROGRESS", description: "iOS and Android banking client with biometric auth and instant transfers.", startDate: "2026-06-01", endDate: "2026-11-15", leaderId: "u1" },
+    { id: "p3", name: "Helios Analytics API", projectType: "API", status: "PLANNING", description: "High-throughput analytics ingestion and query API for internal dashboards.", startDate: "2026-08-01", endDate: "2026-12-20", leaderId: "u1" },
+    { id: "p4", name: "Vertex Desktop Suite", projectType: "DESKTOP", status: "ON_HOLD", description: "Cross-platform desktop toolkit built on Electron for offline editing.", startDate: "2026-03-10", endDate: "2026-10-01", leaderId: "u1" },
+    { id: "p5", name: "Sentinel AI Assistant", projectType: "AI", status: "COMPLETED", description: "Retrieval-augmented assistant for internal knowledge search.", startDate: "2026-01-08", endDate: "2026-06-12", leaderId: "u1" },
+  ];
+  MEMBERS = [
+    { projectId: "p1", userId: "u1", role: "PROJECT_LEADER", position: "BACKEND_DEVELOPER" },
+    { projectId: "p1", userId: "u2", role: "MEMBER", position: "FRONTEND_DEVELOPER" },
+    { projectId: "p1", userId: "u3", role: "MEMBER", position: "UI_UX_DESIGNER" },
+    { projectId: "p1", userId: "u4", role: "MEMBER", position: "TESTER" },
+    { projectId: "p1", userId: "u5", role: "MEMBER", position: "BUSINESS_ANALYST" },
+    { projectId: "p1", userId: "u6", role: "MEMBER", position: "BACKEND_DEVELOPER" },
+    { projectId: "p2", userId: "u1", role: "PROJECT_LEADER", position: "BACKEND_DEVELOPER" },
+    { projectId: "p2", userId: "u2", role: "MEMBER", position: "FRONTEND_DEVELOPER" },
+    { projectId: "p2", userId: "u3", role: "MEMBER", position: "UI_UX_DESIGNER" },
+  ];
+
+  state = {
+    authed: (this.props && this.props.startSignedIn) || false,
+    authMode: "login",
+    authRole: "LEADER",
+    role: (this.props && this.props.defaultRole === "Member") ? "MEMBER" : "LEADER",
+    screen: (this.props && this.props.defaultRole === "Member") ? "mytasks" : "dashboard",
+    activeProjectId: "p1",
+    projectTab: "board",
+    boardView: "kanban",
+    projView: "grid",
+    taskOpenId: null,
+    modal: null,
+    draft: {},
+    commentDraft: "",
+    dragId: null,
+    toast: null,
+    tasks: [
+      { id: "t1", projectId: "p1", code: "CRM-14", title: "Design contact detail layout", description: "Full contact profile with activity timeline, notes and linked deals. Follow the Nocturne dark spec.", status: "DONE", priority: "MEDIUM", progress: 100, assigneeId: "u3", startDate: "2026-05-06", dueDate: "2026-05-20" },
+      { id: "t2", projectId: "p1", code: "CRM-21", title: "Build auth & JWT session flow", description: "Register, login, refresh tokens and role-based route guards on the API.", status: "DONE", priority: "HIGH", progress: 100, assigneeId: "u1", startDate: "2026-05-10", dueDate: "2026-06-02" },
+      { id: "t3", projectId: "p1", code: "CRM-33", title: "Pipeline drag-and-drop board", description: "Kanban board for deals with optimistic updates and reorder within a stage.", status: "IN_PROGRESS", priority: "HIGH", progress: 65, assigneeId: "u2", startDate: "2026-06-05", dueDate: "2026-07-30" },
+      { id: "t4", projectId: "p1", code: "CRM-37", title: "Contacts REST endpoints", description: "CRUD + search + pagination for contacts, with query validation.", status: "IN_PROGRESS", priority: "MEDIUM", progress: 40, assigneeId: "u6", startDate: "2026-06-12", dueDate: "2026-08-05" },
+      { id: "t5", projectId: "p1", code: "CRM-41", title: "Reporting dashboard charts", description: "Revenue, conversion and activity charts on the dashboard.", status: "IN_REVIEW", priority: "MEDIUM", progress: 90, assigneeId: "u2", startDate: "2026-06-20", dueDate: "2026-07-28" },
+      { id: "t6", projectId: "p1", code: "CRM-44", title: "Email integration blocked on SMTP creds", description: "Outbound email needs provider credentials from ops before it can proceed.", status: "BLOCKED", priority: "URGENT", progress: 15, assigneeId: "u6", startDate: "2026-07-01", dueDate: "2026-07-25" },
+      { id: "t7", projectId: "p1", code: "CRM-48", title: "Write E2E tests for deal flow", description: "Playwright coverage for create → move → close deal.", status: "TODO", priority: "MEDIUM", progress: 0, assigneeId: "u4", startDate: "2026-07-15", dueDate: "2026-08-18" },
+      { id: "t8", projectId: "p1", code: "CRM-52", title: "Define reporting requirements", description: "BA to gather stakeholder metrics and acceptance criteria.", status: "TODO", priority: "LOW", progress: 0, assigneeId: "u5", startDate: "2026-07-20", dueDate: "2026-08-10" },
+      { id: "t9", projectId: "p1", code: "CRM-55", title: "Accessibility audit of forms", description: "Keyboard nav, focus rings and ARIA on all input flows.", status: "TODO", priority: "MEDIUM", progress: 0, assigneeId: "u3", startDate: "2026-08-01", dueDate: "2026-08-28" },
+      { id: "t10", projectId: "p1", code: "CRM-58", title: "Rate limiting middleware", description: "Per-IP and per-token limits on the API gateway.", status: "IN_REVIEW", priority: "HIGH", progress: 85, assigneeId: "u1", startDate: "2026-06-28", dueDate: "2026-07-26" },
+      { id: "t11", projectId: "p2", code: "AUR-08", title: "Biometric login prototype", description: "Face ID / fingerprint gate.", status: "IN_PROGRESS", priority: "HIGH", progress: 50, assigneeId: "u2", startDate: "2026-06-08", dueDate: "2026-08-01" },
+      { id: "t12", projectId: "p2", code: "AUR-12", title: "Transfer confirmation screen", description: "Review + confirm UI.", status: "TODO", priority: "MEDIUM", progress: 0, assigneeId: "u3", startDate: "2026-07-10", dueDate: "2026-08-20" },
+    ],
+    issues: [
+      { id: "i1", projectId: "p1", taskId: "t6", title: "SMTP credentials not provisioned", description: "Email service cannot send without provider credentials from the ops team.", severity: "CRITICAL", status: "OPEN", reporterId: "u6", assigneeId: "u1" },
+      { id: "i2", projectId: "p1", taskId: "t3", title: "Drag ghost flickers on Firefox", description: "The drag preview flashes when moving cards quickly between columns.", severity: "MEDIUM", status: "IN_PROGRESS", reporterId: "u2", assigneeId: "u2" },
+      { id: "i3", projectId: "p1", taskId: "t5", title: "Chart tooltips overflow container", description: "Tooltip clipped on narrow viewports.", severity: "LOW", status: "RESOLVED", reporterId: "u4", assigneeId: "u2" },
+      { id: "i4", projectId: "p1", taskId: null, title: "Slow contact search over 10k rows", description: "Search latency exceeds 800ms on large datasets; needs an index.", severity: "HIGH", status: "OPEN", reporterId: "u5", assigneeId: "u6" },
+    ],
+    comments: [
+      { id: "c1", taskId: "t3", userId: "u1", content: "Nice progress — can we make the drop zones a bit more obvious when dragging?", createdAt: "2026-07-18T09:20:00" },
+      { id: "c2", taskId: "t3", userId: "u2", content: "Added a highlighted outline on hover-over. Pushing shortly.", createdAt: "2026-07-18T11:05:00" },
+      { id: "c3", taskId: "t6", userId: "u6", content: "Blocked until ops shares the SMTP creds. Raised issue CRM-44.", createdAt: "2026-07-19T14:40:00" },
+    ],
+  };
+
+  STATUS = {
+    TODO: { label: "To Do", color: "var(--color-neutral-500)" },
+    IN_PROGRESS: { label: "In Progress", color: "var(--color-accent-500)" },
+    IN_REVIEW: { label: "In Review", color: "#a7a1db" },
+    BLOCKED: { label: "Blocked", color: "oklch(.66 .13 25)" },
+    DONE: { label: "Done", color: "oklch(.72 .13 150)" },
+    CANCELLED: { label: "Cancelled", color: "var(--color-neutral-700)" },
+  };
+  BOARD_COLS = ["TODO", "IN_PROGRESS", "IN_REVIEW", "BLOCKED", "DONE"];
+  PRIORITY = {
+    LOW: { label: "Low", color: "var(--color-neutral-500)", tag: "background:var(--color-neutral-800);color:var(--color-neutral-100);" },
+    MEDIUM: { label: "Medium", color: "#a7a1db", tag: "background:var(--color-accent-2-800);color:var(--color-accent-2-100);" },
+    HIGH: { label: "High", color: "oklch(.76 .13 75)", tag: "background:oklch(.34 .07 75);color:oklch(.9 .09 85);" },
+    URGENT: { label: "Urgent", color: "oklch(.66 .13 25)", tag: "background:oklch(.33 .1 25);color:oklch(.9 .08 30);" },
+  };
+  SEVERITY = {
+    LOW: { label: "Low", tag: "background:var(--color-neutral-800);color:var(--color-neutral-100);" },
+    MEDIUM: { label: "Medium", tag: "background:var(--color-accent-2-800);color:var(--color-accent-2-100);" },
+    HIGH: { label: "High", tag: "background:oklch(.34 .07 75);color:oklch(.9 .09 85);" },
+    CRITICAL: { label: "Critical", tag: "background:oklch(.33 .1 25);color:oklch(.9 .08 30);" },
+  };
+  ISTATUS = {
+    OPEN: { label: "Open", color: "oklch(.66 .13 25)" },
+    IN_PROGRESS: { label: "In Progress", color: "var(--color-accent-500)" },
+    RESOLVED: { label: "Resolved", color: "oklch(.72 .13 150)" },
+    CLOSED: { label: "Closed", color: "var(--color-neutral-600)" },
+  };
+  PSTATUS = {
+    PLANNING: { label: "Planning", tag: "background:var(--color-neutral-800);color:var(--color-neutral-100);" },
+    IN_PROGRESS: { label: "In Progress", tag: "background:var(--color-accent-800);color:var(--color-accent-100);" },
+    ON_HOLD: { label: "On Hold", tag: "background:oklch(.34 .07 75);color:oklch(.9 .09 85);" },
+    COMPLETED: { label: "Completed", tag: "background:oklch(.32 .08 150);color:oklch(.9 .1 150);" },
+    CANCELLED: { label: "Cancelled", tag: "background:var(--color-neutral-900);color:var(--color-neutral-400);" },
+  };
+  PTYPE = { WEB: "Web", MOBILE_APP: "Mobile App", DESKTOP: "Desktop", API: "API", AI: "AI", OTHER: "Other" };
+  PTYPE_ICON = { WEB: "ph ph-globe", MOBILE_APP: "ph ph-device-mobile", DESKTOP: "ph ph-desktop-tower", API: "ph ph-plugs-connected", AI: "ph ph-brain", OTHER: "ph ph-cube" };
+  POSITION = { FRONTEND_DEVELOPER: "Frontend Developer", BACKEND_DEVELOPER: "Backend Developer", BUSINESS_ANALYST: "Business Analyst", TESTER: "Tester (QA/QC)", UI_UX_DESIGNER: "UI/UX Designer" };
+
+  initials(name) { return (name || "?").split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase(); }
+  userById(id) { return this.USERS.find(u => u.id === id); }
+  avatarFor(id) {
+    const palettes = ["background:var(--color-accent-800);color:var(--color-accent-100);", "background:var(--color-accent-2-800);color:var(--color-accent-2-100);", "background:oklch(.34 .07 75);color:oklch(.9 .09 85);", "background:oklch(.32 .08 150);color:oklch(.9 .1 150);", "background:oklch(.33 .09 25);color:oklch(.9 .08 30);", "background:var(--color-neutral-800);color:var(--color-neutral-100);"];
+    const i = this.USERS.findIndex(u => u.id === id);
+    return palettes[(i < 0 ? 0 : i) % palettes.length];
+  }
+  fmtDate(d) { if (!d) return "—"; const dt = new Date(d); return dt.toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
+  relTime(d) { const dt = new Date(d); return dt.toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
+
+  projectTasks(pid) { return this.state.tasks.filter(t => t.projectId === pid); }
+  projectProgress(pid) { const ts = this.projectTasks(pid); if (!ts.length) return { total: 0, done: 0, pct: 0 }; const done = ts.filter(t => t.status === "DONE").length; return { total: ts.length, done, pct: Math.round(done / ts.length * 100) }; }
+  projVM(p) {
+    const pr = this.projectProgress(p.id);
+    const leader = this.userById(p.leaderId);
+    const ps = this.PSTATUS[p.status];
+    return {
+      id: p.id, name: p.name, typeLabel: this.PTYPE[p.projectType], description: p.description,
+      statusLabel: ps.label, statusTag: ps.tag + "white-space:nowrap;",
+      iconClass: this.PTYPE_ICON[p.projectType], iconStyle: "background:var(--color-accent-900);color:var(--color-accent-300);",
+      totalTask: pr.total, completedTask: pr.done, progress: pr.pct,
+      barStyle: { width: pr.pct + "%", height: "100%", background: "linear-gradient(90deg,var(--color-accent-600),var(--color-accent-400))", borderRadius: "6px", transition: "width .5s cubic-bezier(.22,1,.36,1)" },
+      leaderName: leader ? leader.name : "—", leaderInitials: leader ? this.initials(leader.name) : "?",
+      deadlineLabel: this.fmtDate(p.endDate), startLabel: this.fmtDate(p.startDate),
+      memberCount: this.MEMBERS.filter(m => m.projectId === p.id).length,
+    };
+  }
+  taskVM(t) {
+    const a = this.userById(t.assigneeId);
+    const pr = this.PRIORITY[t.priority];
+    const st = this.STATUS[t.status];
+    const proj = this.PROJECTS.find(p => p.id === t.projectId);
+    return {
+      id: t.id, code: t.code, title: t.title, description: t.description, progress: t.progress,
+      priorityLabel: pr.label, priorityColor: pr.color, priorityTag: pr.tag,
+      statusLabel: st.label, statusColor: st.color,
+      assigneeName: a ? a.name : "Unassigned", assigneeInitials: a ? this.initials(a.name) : "–",
+      avatarStyle: this.avatarFor(t.assigneeId), dueLabel: this.fmtDate(t.dueDate),
+      projectName: proj ? proj.name : "",
+      barStyle: { width: t.progress + "%", height: "100%", background: t.status === "DONE" ? "oklch(.72 .13 150)" : "linear-gradient(90deg,var(--color-accent-600),var(--color-accent-400))", borderRadius: "5px", transition: "width .4s ease" },
+    };
+  }
+
+  ring(pct) {
+    const r = 52, c = 2 * Math.PI * r, off = c * (1 - pct / 100);
+    return React.createElement("svg", { width: 148, height: 148, viewBox: "0 0 148 148", style: { transform: "rotate(-90deg)" } },
+      React.createElement("circle", { cx: 74, cy: 74, r, fill: "none", stroke: "var(--color-neutral-800)", strokeWidth: 12 }),
+      React.createElement("circle", { cx: 74, cy: 74, r, fill: "none", stroke: "var(--color-accent)", strokeWidth: 12, strokeLinecap: "round", strokeDasharray: c, strokeDashoffset: off, style: { transition: "stroke-dashoffset .8s cubic-bezier(.22,1,.36,1)" } }),
+      React.createElement("text", { x: 74, y: 68, fill: "var(--color-text)", fontSize: 30, fontFamily: "var(--font-heading)", fontWeight: 600, textAnchor: "middle", style: { transform: "rotate(90deg)", transformOrigin: "74px 74px" } }, pct + "%"),
+      React.createElement("text", { x: 74, y: 90, fill: "var(--color-neutral-400)", fontSize: 11, textAnchor: "middle", style: { transform: "rotate(90deg)", transformOrigin: "74px 74px" } }, "complete"),
+    );
+  }
+  hbars(entries, max) {
+    const m = max || Math.max(1, ...entries.map(e => e.value));
+    return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
+      entries.map((e, i) => React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 10 } },
+        React.createElement("span", { style: { width: 78, fontSize: 12, color: "var(--color-neutral-400)", flex: "none", textAlign: "right" } }, e.label),
+        React.createElement("div", { style: { flex: 1, height: 20, background: "var(--color-neutral-900)", borderRadius: 6, overflow: "hidden" } },
+          React.createElement("div", { style: { width: (e.value / m * 100) + "%", height: "100%", background: e.color, borderRadius: 6, transition: "width .7s cubic-bezier(.22,1,.36,1)" } })),
+        React.createElement("span", { style: { width: 22, fontSize: 13, fontFamily: "var(--font-heading)", textAlign: "right" } }, e.value),
+      )));
+  }
+  vbars(entries) {
+    const m = Math.max(1, ...entries.map(e => e.value));
+    return React.createElement("div", { style: { display: "flex", alignItems: "flex-end", gap: 14, height: 150, padding: "24px 4px 0" } },
+      entries.map((e, i) => React.createElement("div", { key: i, style: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, height: "100%" } },
+        React.createElement("div", { style: { flex: 1, width: "100%", display: "flex", alignItems: "flex-end" } },
+          React.createElement("div", { style: { width: "100%", height: (e.value / m * 100) + "%", minHeight: e.value ? 6 : 0, background: e.color, borderRadius: "6px 6px 0 0", transition: "height .7s cubic-bezier(.22,1,.36,1)", position: "relative" } },
+            React.createElement("span", { style: { position: "absolute", top: -20, left: 0, right: 0, textAlign: "center", fontSize: 12, fontFamily: "var(--font-heading)" } }, e.value || ""))),
+        React.createElement("span", { style: { fontSize: 11, color: "var(--color-neutral-400)", textAlign: "center", lineHeight: 1.2 } }, e.label),
+      )));
+  }
+  gantt(pid) {
+    const ts = this.projectTasks(pid).filter(t => t.startDate && t.dueDate);
+    if (!ts.length) return React.createElement("div", { style: { fontSize: 13, color: "var(--color-neutral-500)" } }, "No scheduled tasks.");
+    const dates = ts.flatMap(t => [new Date(t.startDate).getTime(), new Date(t.dueDate).getTime()]);
+    const min = Math.min(...dates), max = Math.max(...dates), span = max - min || 1;
+    const months = [];
+    let cur = new Date(min); cur.setDate(1);
+    while (cur.getTime() <= max) { months.push(new Date(cur)); cur.setMonth(cur.getMonth() + 1); }
+    return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } },
+      React.createElement("div", { style: { display: "flex", marginLeft: 150, borderBottom: "1px solid var(--color-divider)", paddingBottom: 4, marginBottom: 4 } },
+        months.map((mo, i) => React.createElement("div", { key: i, style: { position: "absolute" }, }),
+        )),
+      React.createElement("div", { style: { position: "relative", marginLeft: 150, height: 16, marginBottom: 4 } },
+        months.map((mo, i) => { const left = (mo.getTime() - min) / span * 100; return React.createElement("span", { key: i, style: { position: "absolute", left: left + "%", fontSize: 10, color: "var(--color-neutral-500)", whiteSpace: "nowrap" } }, mo.toLocaleDateString("en-US", { month: "short" })); })),
+      ts.map(t => {
+        const vm = this.taskVM(t);
+        const left = (new Date(t.startDate).getTime() - min) / span * 100;
+        const width = (new Date(t.dueDate).getTime() - new Date(t.startDate).getTime()) / span * 100;
+        return React.createElement("div", { key: t.id, style: { display: "flex", alignItems: "center", gap: 8, height: 24 } },
+          React.createElement("span", { style: { width: 150, flex: "none", fontSize: 12, color: "var(--color-neutral-300)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }, title: t.title }, t.title),
+          React.createElement("div", { style: { position: "relative", flex: 1, height: 16 } },
+            React.createElement("div", { title: vm.statusLabel + " · " + t.progress + "%", style: { position: "absolute", left: left + "%", width: Math.max(width, 3) + "%", height: 16, background: "var(--color-neutral-800)", borderRadius: 5, overflow: "hidden" } },
+              React.createElement("div", { style: { width: t.progress + "%", height: "100%", background: vm.statusColor, borderRadius: 5, transition: "width .7s ease" } }))),
+        );
+      }));
+  }
+
+  countBy(items, key) { const o = {}; items.forEach(it => { o[it[key]] = (o[it[key]] || 0) + 1; }); return o; }
+
+  // ── handlers ──
+  onField = (e) => { const f = e.target.dataset.field; const v = e.target.value; if (f === "commentDraft") this.setState({ commentDraft: v }); else if (f === "activeProjectId") this.setState({ activeProjectId: v }); else this.setState(s => ({ draft: { ...s.draft, [f]: v } })); };
+  onAuthRole = (e) => this.setState({ authRole: e.target.dataset.role });
+  toggleAuthMode = (e) => { e.preventDefault(); this.setState(s => ({ authMode: s.authMode === "login" ? "register" : "login", draft: {} })); };
+  doAuth = () => { const role = this.state.authRole; this.setState({ authed: true, role, screen: role === "MEMBER" ? "mytasks" : "dashboard", draft: {} }); };
+  logout = () => this.setState({ authed: false, draft: {} });
+  onNav = (e) => { e.preventDefault(); const sc = e.currentTarget.dataset.screen; if (sc === "issues") this.setState({ screen: "project", projectTab: "issues", taskOpenId: null }); else if (sc === "members") this.setState({ screen: "project", projectTab: "members", taskOpenId: null }); else this.setState({ screen: sc, taskOpenId: null }); };
+  applyAccent() { const a = this.props && this.props.accentColor; if (a) document.documentElement.style.setProperty("--color-accent", a); }
+  componentDidMount() { this.applyAccent(); }
+  componentDidUpdate() { this.applyAccent(); }
+  onRoleSwitch = (e) => { const role = e.target.dataset.role; this.setState(s => ({ role, screen: role === "MEMBER" ? "mytasks" : (s.screen === "mytasks" ? "dashboard" : s.screen) })); };
+  onSwitchProject = (e) => this.setState({ activeProjectId: e.target.value });
+  openProject = (e) => this.setState({ activeProjectId: e.currentTarget.dataset.id, screen: "project", projectTab: "board" });
+  backToProjects = (e) => { e.preventDefault(); this.setState({ screen: "projects" }); };
+  onProjView = (e) => this.setState({ projView: e.target.dataset.view });
+  onProjectTab = (e) => { e.preventDefault(); this.setState({ projectTab: e.currentTarget.dataset.tab }); };
+  onBoardView = (e) => this.setState({ boardView: e.target.dataset.view });
+  openTask = (e) => this.setState({ taskOpenId: e.currentTarget.dataset.id });
+  closeTask = () => this.setState({ taskOpenId: null });
+  onProgress = (e) => { const v = parseInt(e.target.value, 10); const id = this.state.taskOpenId; this.setState(s => ({ tasks: s.tasks.map(t => t.id === id ? { ...t, progress: v, status: v === 100 ? "DONE" : (t.status === "DONE" && v < 100 ? "IN_PROGRESS" : t.status) } : t) })); };
+  onSetStatus = (e) => { const st = e.currentTarget.dataset.status; const id = this.state.taskOpenId; this.setState(s => ({ tasks: s.tasks.map(t => t.id === id ? { ...t, status: st, progress: st === "DONE" ? 100 : t.progress } : t) })); };
+  addComment = () => { const txt = (this.state.commentDraft || "").trim(); const id = this.state.taskOpenId; if (!txt || !id) return; const uid = this.state.role === "MEMBER" ? "u2" : "u1"; this.setState(s => ({ comments: [...s.comments, { id: "c" + Date.now(), taskId: id, userId: uid, content: txt, createdAt: new Date().toISOString() }], commentDraft: "" })); };
+  onDragStart = (e) => { this.setState({ dragId: e.currentTarget.dataset.id }); e.currentTarget.style.opacity = "0.4"; e.dataTransfer.effectAllowed = "move"; };
+  onDragEnd = (e) => { e.currentTarget.style.opacity = ""; };
+  onDragOver = (e) => { e.preventDefault(); e.currentTarget.classList.add("ph-col-over"); };
+  onDragLeave = (e) => { e.currentTarget.classList.remove("ph-col-over"); };
+  onDrop = (e) => { e.preventDefault(); e.currentTarget.classList.remove("ph-col-over"); const st = e.currentTarget.dataset.status; const id = this.state.dragId; if (!id) return; this.setState(s => ({ dragId: null, tasks: s.tasks.map(t => t.id === id ? { ...t, status: st, progress: st === "DONE" ? 100 : t.progress } : t) })); };
+  stop = (e) => e.stopPropagation();
+  closeModal = () => this.setState({ modal: null, draft: {} });
+  openNewProject = () => this.setState({ modal: "project", draft: { projectType: "WEB", status: "PLANNING" } });
+  openEditProject = () => { const p = this.PROJECTS.find(x => x.id === this.state.activeProjectId); this.setState({ modal: "project", draft: { name: p.name, projectType: p.projectType, status: p.status, description: p.description, startDate: p.startDate, endDate: p.endDate } }); };
+  openNewTask = () => this.setState({ modal: "task", draft: { priority: "MEDIUM", assigneeId: "u2" } });
+  openNewIssue = () => this.setState({ modal: "issue", draft: { severity: "MEDIUM" } });
+  openAddMember = () => this.setState({ modal: "member", draft: { memberPosition: "FRONTEND_DEVELOPER" } });
+  submitModal = () => {
+    const { modal, draft, activeProjectId } = this.state;
+    if (modal === "task") {
+      if (!draft.title) return;
+      const n = this.state.tasks.filter(t => t.projectId === activeProjectId).length + 1;
+      this.setState(s => ({ tasks: [...s.tasks, { id: "t" + Date.now(), projectId: activeProjectId, code: "CRM-" + (60 + n), title: draft.title, description: draft.description || "", status: "TODO", priority: draft.priority || "MEDIUM", progress: 0, assigneeId: draft.assigneeId || "u2", startDate: new Date().toISOString().slice(0, 10), dueDate: draft.dueDate || null }], modal: null, draft: {}, toast: "Task created" }));
+    } else if (modal === "issue") {
+      if (!draft.title) return;
+      const uid = this.state.role === "MEMBER" ? "u2" : "u1";
+      this.setState(s => ({ issues: [...s.issues, { id: "i" + Date.now(), projectId: activeProjectId, taskId: null, title: draft.title, description: draft.description || "", severity: draft.severity || "MEDIUM", status: "OPEN", reporterId: uid, assigneeId: null }], modal: null, draft: {}, toast: "Issue reported" }));
+    } else if (modal === "member") {
+      if (!draft.memberUserId) { this.setState({ modal: null, draft: {} }); return; }
+      this.MEMBERS.push({ projectId: activeProjectId, userId: draft.memberUserId, role: "MEMBER", position: draft.memberPosition || "FRONTEND_DEVELOPER" });
+      this.setState({ modal: null, draft: {}, toast: "Member added" });
+    } else if (modal === "project") {
+      this.setState({ modal: null, draft: {}, toast: draft.name ? "Project saved" : "Saved" });
+    }
+    setTimeout(() => this.setState({ toast: null }), 2700);
+  };
+
+  renderVals() {
+    const s = this.state;
+    const accent = (this.props && this.props.accentColor) || null;
+    const currentUserId = s.role === "MEMBER" ? "u2" : "u1";
+    const cu = this.userById(currentUserId);
+    const isLeader = s.role === "LEADER";
+    const ap = this.PROJECTS.find(p => p.id === s.activeProjectId) || this.PROJECTS[0];
+
+    // nav
+    const leaderNav = [
+      { screen: "dashboard", label: "Dashboard", icon: "ph ph-chart-pie-slice" },
+      { screen: "projects", label: "Projects", icon: "ph ph-folders", badge: String(this.PROJECTS.length) },
+      { screen: "project", label: "Board", icon: "ph ph-kanban" },
+      { screen: "issues", label: "Issues", icon: "ph ph-warning-circle" },
+      { screen: "members", label: "Members", icon: "ph ph-users-three" },
+    ];
+    const memberNav = [
+      { screen: "mytasks", label: "My Tasks", icon: "ph ph-list-checks" },
+      { screen: "projects", label: "Projects", icon: "ph ph-folders", badge: String(this.PROJECTS.length) },
+    ];
+    const screenToNav = { dashboard: "dashboard", projects: "projects", project: isLeader ? "project" : "projects", issues: "issues", members: "members", mytasks: "mytasks" };
+    const activeNav = screenToNav[s.screen] || s.screen;
+    const navSrc = isLeader ? leaderNav : memberNav;
+    const navItems = navSrc.map(n => {
+      const active = n.screen === activeNav || (n.screen === "issues" && s.screen === "project" && s.projectTab === "issues");
+      return { screen: n.screen === "project" ? "project" : n.screen, label: n.label, iconClass: n.icon, badge: n.badge || null, current: active ? "page" : null,
+        style: "display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:8px;font-size:14px;text-decoration:none;white-space:nowrap;font-family:var(--font-heading);" + (active ? "background:color-mix(in srgb,var(--color-accent) 15%,transparent);color:var(--color-accent-200);" : "color:var(--color-neutral-300);") };
+    });
+
+    // page title
+    const titles = { dashboard: ["Dashboard", "Project statistics & health"], projects: ["Projects", "All projects you can access"], project: [ap.name, "Board · tasks · issues · members"], issues: ["Issues", "Problems reported across your projects"], members: ["Members", "People on your projects"], mytasks: ["My Tasks", "Everything assigned to you"] };
+    const [pageTitle, pageSubtitle] = titles[s.screen] || ["", ""];
+
+    // projects list vm
+    const projects = this.PROJECTS.map(p => this.projVM(p));
+    const activeProject = this.projVM(ap);
+
+    // dashboard stats
+    const apTasks = this.projectTasks(ap.id);
+    const apIssues = s.issues.filter(i => i.projectId === ap.id);
+    const now = Date.now();
+    const overdue = apTasks.filter(t => t.dueDate && t.status !== "DONE" && t.status !== "CANCELLED" && new Date(t.dueDate).getTime() < now).length;
+    const openIssues = apIssues.filter(i => i.status !== "CLOSED").length;
+    const pr = this.projectProgress(ap.id);
+    const statCards = [
+      { label: "Total tasks", value: pr.total, sub: pr.done + " completed", subColor: "var(--color-neutral-400)", iconClass: "ph ph-list-checks", iconStyle: "background:var(--color-accent-900);color:var(--color-accent-300);" },
+      { label: "In progress", value: apTasks.filter(t => t.status === "IN_PROGRESS").length, sub: "being worked on", subColor: "var(--color-neutral-400)", iconClass: "ph ph-spinner-gap", iconStyle: "background:var(--color-accent-2-900);color:var(--color-accent-2-300);" },
+      { label: "Overdue", value: overdue, sub: overdue ? "past due date" : "on track", subColor: overdue ? "oklch(.72 .12 25)" : "oklch(.72 .12 150)", iconClass: "ph ph-clock-countdown", iconStyle: "background:oklch(.3 .09 25);color:oklch(.8 .1 30);" },
+      { label: "Open issues", value: openIssues, sub: apIssues.length + " total reported", subColor: "var(--color-neutral-400)", iconClass: "ph ph-warning-circle", iconStyle: "background:oklch(.32 .08 75);color:oklch(.85 .1 85);" },
+    ];
+    const tbs = this.countBy(apTasks, "status");
+    const statusEntries = this.BOARD_COLS.map(k => ({ label: this.STATUS[k].label, value: tbs[k] || 0, color: this.STATUS[k].color }));
+    const tbp = this.countBy(apTasks, "priority");
+    const prioEntries = ["LOW", "MEDIUM", "HIGH", "URGENT"].map(k => ({ label: this.PRIORITY[k].label, value: tbp[k] || 0, color: this.PRIORITY[k].color }));
+    const ibs = this.countBy(apIssues, "severity");
+    const sevEntries = ["LOW", "MEDIUM", "HIGH", "CRITICAL"].map(k => ({ label: this.SEVERITY[k].label, value: ibs[k] || 0, color: this.PRIORITY[k] ? this.PRIORITY[k].color : "var(--color-neutral-500)" }));
+
+    // board
+    const columns = this.BOARD_COLS.map(k => { const ts = apTasks.filter(t => t.status === k).map(t => this.taskVM(t)); return { key: k, label: this.STATUS[k].label, color: this.STATUS[k].color, count: ts.length, tasks: ts }; });
+    const boardRows = apTasks.map(t => this.taskVM(t));
+
+    // issues vm
+    const issues = apIssues.map(i => { const r = this.userById(i.reporterId); const a = this.userById(i.assigneeId); const task = s.tasks.find(t => t.id === i.taskId); const sv = this.SEVERITY[i.severity]; const st = this.ISTATUS[i.status]; return { title: i.title, description: i.description, taskTitle: task ? task.code : "—", severityLabel: sv.label, severityTag: sv.tag, statusLabel: st.label, statusColor: st.color, reporterName: r ? r.name : "—", assigneeName: a ? a.name : "Unassigned" }; });
+
+    // members vm
+    const members = this.MEMBERS.filter(m => m.projectId === ap.id).map(m => { const u = this.userById(m.userId); const taskCount = apTasks.filter(t => t.assigneeId === m.userId).length; return { name: u.name, email: u.email, initials: this.initials(u.name), positionLabel: this.POSITION[m.position], isLeader: m.role === "PROJECT_LEADER", avatarStyle: this.avatarFor(m.userId), roleTag: "background:var(--color-neutral-800);color:var(--color-neutral-200);", taskCount }; });
+
+    // my tasks
+    const myTaskList = s.tasks.filter(t => t.assigneeId === currentUserId).map(t => this.taskVM(t));
+    const myStats = [
+      { label: "Assigned", value: myTaskList.length },
+      { label: "In progress", value: s.tasks.filter(t => t.assigneeId === currentUserId && t.status === "IN_PROGRESS").length },
+      { label: "Done", value: s.tasks.filter(t => t.assigneeId === currentUserId && t.status === "DONE").length },
+    ];
+
+    // task drawer
+    const selT = s.tasks.find(t => t.id === s.taskOpenId);
+    const selectedTask = selT ? this.taskVM(selT) : {};
+    const comments = s.taskOpenId ? s.comments.filter(c => c.taskId === s.taskOpenId).map(c => { const u = this.userById(c.userId); return { authorName: u ? u.name : "?", initials: u ? this.initials(u.name) : "?", content: c.content, timeLabel: this.relTime(c.createdAt), avatarStyle: this.avatarFor(c.userId) }; }) : [];
+    const statusOptions = this.BOARD_COLS.concat(["CANCELLED"]).map(k => { const active = selT && selT.status === k; return { key: k, label: this.STATUS[k].label, color: this.STATUS[k].color, style: "display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 11px;border-radius:8px;cursor:pointer;white-space:nowrap;border:1px solid " + (active ? "var(--color-accent)" : "var(--color-divider)") + ";background:" + (active ? "color-mix(in srgb,var(--color-accent) 14%,transparent)" : "transparent") + ";color:var(--color-text);font-family:inherit;" }; });
+
+    // project tabs
+    const tabDefs = [ { key: "board", label: "Board", icon: "ph ph-kanban" }, { key: "issues", label: "Issues", icon: "ph ph-warning-circle", count: apIssues.length }, { key: "members", label: "Members", icon: "ph ph-users-three", count: members.length } ];
+    const projectTabs = tabDefs.map(t => ({ key: t.key, label: t.label, iconClass: t.icon, count: t.count || null, style: "display:inline-flex;align-items:center;gap:7px;padding:10px 14px;font-size:14px;text-decoration:none;font-family:var(--font-heading);border-bottom:2px solid " + (s.projectTab === t.key ? "var(--color-accent)" : "transparent") + ";color:" + (s.projectTab === t.key ? "var(--color-accent-200)" : "var(--color-neutral-400)") + ";margin-bottom:-1px;" }));
+
+    // modal option lists
+    const sel = (v, cur) => v === cur;
+    const typeOptions = Object.keys(this.PTYPE).map(k => ({ key: k, label: this.PTYPE[k], selected: sel(k, s.draft.projectType) }));
+    const statusSelOptions = Object.keys(this.PSTATUS).map(k => ({ key: k, label: this.PSTATUS[k].label, selected: sel(k, s.draft.status) }));
+    const priorityOptions = Object.keys(this.PRIORITY).map(k => ({ key: k, label: this.PRIORITY[k].label, selected: sel(k, s.draft.priority) }));
+    const severityOptions = Object.keys(this.SEVERITY).map(k => ({ key: k, label: this.SEVERITY[k].label, selected: sel(k, s.draft.severity) }));
+    const positionOptions = Object.keys(this.POSITION).map(k => ({ key: k, label: this.POSITION[k], selected: sel(k, s.draft.memberPosition) }));
+    const memberIds = this.MEMBERS.filter(m => m.projectId === ap.id).map(m => m.userId);
+    const assigneeOptions = this.MEMBERS.filter(m => m.projectId === ap.id).map(m => ({ key: m.userId, label: this.userById(m.userId).name, selected: sel(m.userId, s.draft.assigneeId) }));
+    const userOptions = [{ key: "", label: "Select a person…", selected: !s.draft.memberUserId }].concat(this.USERS.filter(u => !memberIds.includes(u.id)).map(u => ({ key: u.id, label: u.name + " · " + u.email, selected: sel(u.id, s.draft.memberUserId) })));
+    const projectOptions = this.PROJECTS.map(p => ({ id: p.id, name: p.name, selected: p.id === s.activeProjectId }));
+
+    const modalTitles = { project: s.draft.name !== undefined && s.draft.name ? "Edit project" : "New project", task: "Add task", issue: "Report issue", member: "Add member" };
+    const modalCtas = { project: "Save project", task: "Create task", issue: "Submit", member: "Add member" };
+
+    return {
+      rootAccent: accent ? { "--color-accent": accent } : {},
+      isAuth: !s.authed, isApp: s.authed,
+      isRegister: s.authMode === "register",
+      authTitle: s.authMode === "register" ? "Create your account" : "Welcome back",
+      authSubtitle: s.authMode === "register" ? "Start managing projects in minutes." : "Sign in to continue to ProjectHub.",
+      authCta: s.authMode === "register" ? "Create account" : "Sign in",
+      authSwitchLabel: s.authMode === "register" ? "Already have an account?" : "New to ProjectHub?",
+      authSwitchCta: s.authMode === "register" ? "Sign in" : "Create one",
+      pickLeader: s.authRole === "LEADER", pickMember: s.authRole === "MEMBER",
+      draft: s.draft, commentDraft: s.commentDraft,
+      onField: this.onField, onAuthRole: this.onAuthRole, toggleAuthMode: this.toggleAuthMode, doAuth: this.doAuth, logout: this.logout,
+      navItems, currentUser: { name: cu.name, initials: this.initials(cu.name) }, roleLabel: isLeader ? "Project Leader" : "Member",
+      onNav: this.onNav, onRoleSwitch: this.onRoleSwitch,
+      isLeaderRole: isLeader, isMemberRole: !isLeader,
+      pageTitle, pageSubtitle,
+      isDashboard: s.screen === "dashboard", isProjects: s.screen === "projects", isProjectDetail: s.screen === "project", isIssues: false, isMembers: s.screen === "members" && false, isMyTasks: s.screen === "mytasks",
+      // top-level issues/members screens route into project detail tabs for leader
+      projects, projectCount: this.PROJECTS.length, activeProject, projectOptions,
+      onSwitchProject: this.onSwitchProject, openProject: this.openProject, openNewProject: this.openNewProject, backToProjects: this.backToProjects,
+      projGrid: s.projView === "grid", projTable: s.projView === "table", onProjView: this.onProjView,
+      statCards, progressRing: this.ring(pr.pct), statusChart: this.vbars(statusEntries), priorityChart: this.hbars(prioEntries), severityChart: this.hbars(sevEntries), ganttChart: this.gantt(ap.id),
+      projectTabs, onProjectTab: this.onProjectTab, isBoardTab: s.projectTab === "board", isIssuesTab: s.projectTab === "issues", isMembersTab: s.projectTab === "members",
+      isKanban: s.boardView === "kanban", isBoardTable: s.boardView === "table", onBoardView: this.onBoardView,
+      showKanban: s.projectTab === "board" && s.boardView === "kanban", showBoardTable: s.projectTab === "board" && s.boardView === "table",
+      columns, boardRows,
+      openEditProject: this.openEditProject, openNewTask: this.openNewTask, openNewIssue: this.openNewIssue, openAddMember: this.openAddMember,
+      onDragStart: this.onDragStart, onDragEnd: this.onDragEnd, onDragOver: this.onDragOver, onDragLeave: this.onDragLeave, onDrop: this.onDrop,
+      openTask: this.openTask,
+      issues, issueCount: apIssues.length, members, memberCount: members.length,
+      myTasks: myTaskList, myStats,
+      taskOpen: !!s.taskOpenId, selectedTask, comments, commentCount: comments.length,
+      closeTask: this.closeTask, onProgress: this.onProgress, onSetStatus: this.onSetStatus, addComment: this.addComment, statusOptions,
+      modalOpen: !!s.modal, isProjectModal: s.modal === "project", isTaskModal: s.modal === "task", isIssueModal: s.modal === "issue", isMemberModal: s.modal === "member",
+      modalTitle: modalTitles[s.modal] || "", modalCta: modalCtas[s.modal] || "Save",
+      closeModal: this.closeModal, submitModal: this.submitModal, stop: this.stop,
+      typeOptions, statusSelOptions, priorityOptions, severityOptions, positionOptions, assigneeOptions, userOptions,
+      toast: s.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>
