@@ -33,3 +33,14 @@ export function useUpdateIssue(projectId: string) {
     },
   });
 }
+
+export function useDeleteIssue(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (issueId: string) => issuesApi.deleteIssue(projectId, issueId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: qk.issues(projectId) });
+      void queryClient.invalidateQueries({ queryKey: qk.dashboard(projectId) });
+    },
+  });
+}

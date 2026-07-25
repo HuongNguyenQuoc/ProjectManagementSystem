@@ -26,15 +26,16 @@ import { useAuth } from '@/hooks/useAuth';
 import { useActiveProjectContext } from '@/hooks/useActiveProjectContext';
 import { useProject, useProjectRole, useRemoveProjectMember } from '@/hooks/useProjects';
 import { useTasks, useUpdateTask } from '@/hooks/useTasks';
-import { useIssues } from '@/hooks/useIssues';
+import { useDeleteIssue, useIssues } from '@/hooks/useIssues';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { useToast } from '@/hooks/useToast';
 import { errorMessage, isForbidden } from '@/lib/api';
 import { PROJECT_TYPE } from '@/lib/constants';
-import type { TaskStatus } from '@/types/api';
+import type { IssueListItem, TaskStatus } from '@/types/api';
 
 type Tab = 'board' | 'issues' | 'members';
 type BoardView = 'kanban' | 'table';
+type IssueModalState = { mode: 'create' } | { mode: 'edit'; issue: IssueListItem } | null;
 
 export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -46,7 +47,7 @@ export function ProjectDetailPage() {
   const [boardView, setBoardView] = useState<BoardView>('kanban');
   const [projectModalOpen, setProjectModalOpen] = useState(false);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
-  const [issueModalOpen, setIssueModalOpen] = useState(false);
+  const [issueModal, setIssueModal] = useState<IssueModalState>(null);
   const [memberModalOpen, setMemberModalOpen] = useState(false);
 
   useEffect(() => {
@@ -68,7 +69,9 @@ export function ProjectDetailPage() {
   const { data: issues, isLoading: issuesLoading } = useIssues(isMember ? projectId : undefined);
   const updateTask = useUpdateTask(projectId ?? '');
   const removeMember = useRemoveProjectMember(projectId ?? '');
+  const deleteIssue = useDeleteIssue(projectId ?? '');
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
+  const [deletingIssueId, setDeletingIssueId] = useState<string | null>(null);
 
   const tab = (searchParams.get('tab') as Tab | null) ?? 'board';
   const openTaskId = searchParams.get('task');
@@ -119,6 +122,19 @@ export function ProjectDetailPage() {
       showToast(errorMessage(error), 'error');
     } finally {
       setRemovingUserId(null);
+    }
+  }
+
+  async function handleDeleteIssue(issue: IssueListItem) {
+    if (!window.confirm(`Delete "${issue.title}"? This cannot be undone.`)) return;
+    setDeletingIssueId(issue.id);
+    try {
+      await deleteIssue.mutateAsync(issue.id);
+      showToast('Issue deleted');
+    } catch (error) {
+      showToast(errorMessage(error), 'error');
+    } finally {
+      setDeletingIssueId(null);
     }
   }
 
@@ -254,12 +270,23 @@ export function ProjectDetailPage() {
             <span style={{ fontSize: 13, color: 'var(--color-neutral-400)' }}>
               {issues?.length ?? 0} issues reported
             </span>
-            <Button variant="primary" onClick={() => setIssueModalOpen(true)} style={{ marginLeft: 'auto' }}>
+            <Button variant="primary" onClick={() => setIssueModal({ mode: 'create' })} style={{ marginLeft: 'auto' }}>
               <Plus size={14} weight="bold" />
               Report issue
             </Button>
           </div>
-          {issuesLoading ? <LoadingState label="Loading issues…" /> : <IssuesTable issues={issues ?? []} />}
+          {issuesLoading ? (
+            <LoadingState label="Loading issues…" />
+          ) : (
+            <IssuesTable
+              issues={issues ?? []}
+              currentUserId={user?.id}
+              isLeader={isLeader}
+              onEdit={(issue) => setIssueModal({ mode: 'edit', issue })}
+              onDelete={(issue) => void handleDeleteIssue(issue)}
+              deletingIssueId={deletingIssueId}
+            />
+          )}
         </div>
       )}
 
@@ -304,7 +331,15 @@ export function ProjectDetailPage() {
             projectId={projectId}
             members={project.members}
           />
-          <IssueFormModal open={issueModalOpen} onClose={() => setIssueModalOpen(false)} projectId={projectId} />
+          <IssueFormModal
+            key={issueModal?.mode === 'edit' ? issueModal.issue.id : 'create'}
+            open={issueModal !== null}
+            onClose={() => setIssueModal(null)}
+            projectId={projectId}
+            issue={issueModal?.mode === 'edit' ? issueModal.issue : undefined}
+            isLeader={isLeader}
+            members={project.members}
+          />
           <MemberFormModal
             open={memberModalOpen}
             onClose={() => setMemberModalOpen(false)}

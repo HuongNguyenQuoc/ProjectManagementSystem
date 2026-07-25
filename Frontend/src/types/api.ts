@@ -232,7 +232,9 @@ export interface IssueListItem {
   status: IssueStatus;
   taskId: string | null;
   taskTitle: string | null;
+  reporterId: string;
   reporterName: string;
+  assigneeId: string | null;
   assigneeName: string | null;
   resolvedAt: string | null;
   createdAt: string;
@@ -245,8 +247,13 @@ export interface CreateIssueInput {
   taskId?: string;
 }
 
-/** `PATCH .../issues/:issueId` — leader only. */
+/**
+ * `PATCH .../issues/:issueId`. Leader: everything. Reporter (non-leader):
+ * only `title`/`description`, and only while the issue isn't RESOLVED/CLOSED.
+ */
 export interface UpdateIssueInput {
+  title?: string;
+  description?: string;
   status?: IssueStatus;
   severity?: IssueSeverity;
   assignedTo?: string;

@@ -11,7 +11,12 @@ export function createIssue(projectId: string, input: CreateIssueInput) {
   return api.post<IssueListItem>(`/projects/${projectId}/issues`, input);
 }
 
-/** `PATCH /api/projects/:projectId/issues/:issueId` — leader only. */
+/** `PATCH /api/projects/:projectId/issues/:issueId` — leader, or the reporter editing their own. */
 export function updateIssue(projectId: string, issueId: string, input: UpdateIssueInput) {
   return api.patch<IssueListItem>(`/projects/${projectId}/issues/${issueId}`, input);
+}
+
+/** `DELETE /api/projects/:projectId/issues/:issueId` — leader, or the reporter deleting their own. */
+export function deleteIssue(projectId: string, issueId: string) {
+  return api.delete<IssueListItem>(`/projects/${projectId}/issues/${issueId}`);
 }
