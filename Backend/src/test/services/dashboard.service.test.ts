@@ -38,6 +38,22 @@ describe("dashboard.service", () => {
     await expect(getProjectDashboardService("p1", "leader-1")).rejects.toThrow(AppError);
   });
 
+  it("allows an admin to view the dashboard without a membership row of their own", async () => {
+    vi.mocked(projectRepository.findProjectMember).mockResolvedValue(null as never);
+    vi.mocked(projectRepository.findProjectById).mockResolvedValue({
+      id: "p1",
+      name: "P1",
+      status: "IN_PROGRESS",
+      members: [],
+    } as never);
+    vi.mocked(taskRepository.findTasksByProjectId).mockResolvedValue([]);
+    vi.mocked(issueRepository.findIssuesByProjectId).mockResolvedValue([]);
+
+    await expect(getProjectDashboardService("p1", "admin-1", "ADMIN")).resolves.toMatchObject({
+      projectId: "p1",
+    });
+  });
+
   it("computes stats correctly for the Leader", async () => {
     vi.mocked(projectRepository.findProjectMember).mockResolvedValue(leaderMembership as never);
     vi.mocked(projectRepository.findProjectById).mockResolvedValue({

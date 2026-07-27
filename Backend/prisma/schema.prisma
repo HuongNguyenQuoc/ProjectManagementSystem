@@ -44,6 +44,13 @@ enum ProjectRole {
   @@map("project_role")
 }
 
+enum GlobalRole {
+  ADMIN
+  USER
+
+  @@map("global_role")
+}
+
 enum MemberPosition {
   FRONTEND_DEVELOPER
   BACKEND_DEVELOPER
@@ -98,6 +105,7 @@ model User {
   email String @unique @db.VarChar(255)
   password String @db.VarChar(255)
   status UserStatus @default(ACTIVE)
+  role GlobalRole @default(USER)
 
   createdAt DateTime @default(now()) @map("createdAt") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @map("updatedAt") @db.Timestamptz(6)

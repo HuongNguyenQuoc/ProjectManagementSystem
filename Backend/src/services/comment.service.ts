@@ -1,11 +1,17 @@
 import { AppError } from "../errors/appError.js";
+import type { GlobalRole } from "../generated/prisma/enums.js";
 import { findTaskById } from "../repositories/task.repository.js";
 import { createComment, findCommentsByTaskId } from "../repositories/comment.repository.js";
-import { findProjectMember } from "../repositories/project.repository.js";
+import { getProjectAccess } from "./projectAccess.js";
 
-const assertTaskInProject = async (projectId: string, taskId: string, requesterId: string) => {
-  const requesterMembership = await findProjectMember(projectId, requesterId);
-  if (!requesterMembership) {
+const assertTaskInProject = async (
+  projectId: string,
+  taskId: string,
+  requesterId: string,
+  requesterRole: GlobalRole = "USER",
+) => {
+  const { isMember } = await getProjectAccess(projectId, requesterId, requesterRole);
+  if (!isMember) {
     throw new AppError(403, "You are not a member of this project");
   }
 
@@ -15,22 +21,33 @@ const assertTaskInProject = async (projectId: string, taskId: string, requesterI
   }
 }
 
-export const createCommentService = async (projectId: string, taskId: string, input: { content?: string }, requesterId: string) => {
-  await assertTaskInProject(projectId, taskId, requesterId);
+export const createCommentService = async (
+  projectId: string,
+  taskId: string,
+  input: { content?: string },
+  requesterId: string,
+  requesterRole: GlobalRole = "USER",
+) => {
+  await assertTaskInProject(projectId, taskId, requesterId, requesterRole);
 
   if (!input.content || input.content.trim() === "") {
     throw new AppError(400, "Comment content cannot be empty");
   }
 
   return await createComment({
-    taskId, 
-    userId: requesterId, 
+    taskId,
+    userId: requesterId,
     content: input.content.trim()
   });
 };
 
-export const listCommentsByTaskService = async (projectId: string, taskId: string, requesterId: string) => {
-  await assertTaskInProject(projectId, taskId, requesterId);
+export const listCommentsByTaskService = async (
+  projectId: string,
+  taskId: string,
+  requesterId: string,
+  requesterRole: GlobalRole = "USER",
+) => {
+  await assertTaskInProject(projectId, taskId, requesterId, requesterRole);
 
   const comments = await findCommentsByTaskId(taskId);
 

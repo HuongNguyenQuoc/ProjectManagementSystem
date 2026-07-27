@@ -74,6 +74,17 @@ describe("issue.services", () => {
         expect.objectContaining({ projectId: "p1", title: "Bug A", reportedBy: "member-1" }),
       );
     });
+
+    it("allows an admin to report an issue without a membership row of their own", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(null as never);
+      vi.mocked(issueRepository.createIssue).mockResolvedValue({ id: "i1" } as never);
+
+      await createIssueService("p1", { title: "Bug A", description: "desc" }, "admin-1", "ADMIN");
+
+      expect(issueRepository.createIssue).toHaveBeenCalledWith(
+        expect.objectContaining({ projectId: "p1", title: "Bug A", reportedBy: "admin-1" }),
+      );
+    });
   });
 
   describe("listIssuesByProjectService", () => {

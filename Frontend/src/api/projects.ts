@@ -8,7 +8,7 @@ import type {
   UpdateProjectInput,
 } from '@/types/api';
 
-/** `GET /api/projects` — returns every project, membership not required. */
+/** `GET /api/projects` — every project for an admin, only your own memberships otherwise. */
 export function listProjects() {
   return api.get<ProjectListItem[]>('/projects');
 }
@@ -36,4 +36,9 @@ export function addProjectMember(projectId: string, input: AddMemberInput) {
 /** `DELETE /api/projects/:projectId/members/:userId` — leader only, never the leader. */
 export function removeProjectMember(projectId: string, userId: string) {
   return api.delete<ProjectMemberRow>(`/projects/${projectId}/members/${userId}`);
+}
+
+/** `DELETE /api/projects/:projectId` — admin only. */
+export function deleteProject(projectId: string) {
+  return api.delete<ProjectDetail>(`/projects/${projectId}`);
 }

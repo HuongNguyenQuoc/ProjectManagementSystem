@@ -55,6 +55,18 @@ describe("comment.service", () => {
         expect.objectContaining({ taskId: "task-1", userId: "member-1", content: "hello" }),
       );
     });
+
+    it("allows an admin to comment without a membership row of their own", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValue(null as never);
+      vi.mocked(taskRepository.findTaskById).mockResolvedValue(taskInProject as never);
+      vi.mocked(commentRepository.createComment).mockResolvedValue({} as never);
+
+      await createCommentService("p1", "task-1", { content: "hi" }, "admin-1", "ADMIN");
+
+      expect(commentRepository.createComment).toHaveBeenCalledWith(
+        expect.objectContaining({ taskId: "task-1", userId: "admin-1", content: "hi" }),
+      );
+    });
   });
 
   describe("listCommentsByTaskService", () => {

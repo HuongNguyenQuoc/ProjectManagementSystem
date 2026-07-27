@@ -8,29 +8,30 @@ import {
 } from "../services/issue.services.js";
 
 export const createIssueController = async (req: AuthRequest, res: Response) => {
-  const issue = await createIssueService(req.params.projectId as string, req.body, req.userId as string);
+  const issue = await createIssueService(req.params.projectId as string, req.body, req.userId as string, req.userRole);
   res.status(201).json({
     success: true,
     message: "Issue created successfully",
     data: issue,
-  }); 
+  });
 };
 
 export const listIssuesByProjectController = async (req: AuthRequest, res: Response) => {
-  const issues = await listIssuesByProjectService(req.params.projectId as string, req.userId as string);
+  const issues = await listIssuesByProjectService(req.params.projectId as string, req.userId as string, req.userRole);
   res.status(200).json({
     success: true,
     message: "Issues retrieved successfully",
     data: issues,
   });
-};  
+};
 
 export const updateIssueController = async (req: AuthRequest, res: Response) => {
   const issue = await updateIssueService(
     req.params.projectId as string,
     req.params.issueId as string,
     req.body,
-    req.userId as string
+    req.userId as string,
+    req.userRole,
   );
   res.status(200).json({
     success: true,
@@ -44,6 +45,7 @@ export const deleteIssueController = async (req: AuthRequest, res: Response) => 
     req.params.projectId as string,
     req.params.issueId as string,
     req.userId as string,
+    req.userRole,
   );
   res.status(200).json({
     success: true,

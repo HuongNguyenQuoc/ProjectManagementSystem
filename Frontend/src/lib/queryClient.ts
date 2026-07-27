@@ -24,4 +24,5 @@ export const qk = {
   issues: (projectId: string) => ['issues', projectId] as const,
   comments: (projectId: string, taskId: string) => ['comments', projectId, taskId] as const,
   dashboard: (projectId: string) => ['dashboard', projectId] as const,
+  adminUsers: () => ['admin', 'users'] as const,
 };

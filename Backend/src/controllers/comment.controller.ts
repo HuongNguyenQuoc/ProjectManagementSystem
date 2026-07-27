@@ -14,6 +14,7 @@ export const createCommentController = async (
     req.params.taskId as string,
     req.body,
     req.userId as string,
+    req.userRole,
   );
   res.status(201).json({
     success: true,
@@ -30,6 +31,7 @@ export const listCommentsByTaskController = async (
     req.params.projectId as string,
     req.params.taskId as string,
     req.userId as string,
+    req.userRole,
   );
   res.status(200).json({
     success: true,

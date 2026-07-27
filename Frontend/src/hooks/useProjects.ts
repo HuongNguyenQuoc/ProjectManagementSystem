@@ -78,3 +78,13 @@ export function useRemoveProjectMember(projectId: string) {
     },
   });
 }
+
+export function useDeleteProject() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (projectId: string) => projectsApi.deleteProject(projectId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: qk.projects() });
+    },
+  });
+}

@@ -12,6 +12,7 @@ const fakeUser = {
   email: "a@test.com",
   password: bcrypt.hashSync("correct-password", 10), 
   status: "ACTIVE" as const,
+  role: "USER" as const,
   createdAt: new Date(),
   updatedAt: new Date(),
 };

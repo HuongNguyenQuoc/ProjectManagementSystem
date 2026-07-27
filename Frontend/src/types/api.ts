@@ -10,6 +10,9 @@
 export const USER_STATUSES = ['ACTIVE', 'INACTIVE', 'BLOCKED'] as const;
 export type UserStatus = (typeof USER_STATUSES)[number];
 
+export const GLOBAL_ROLES = ['ADMIN', 'USER'] as const;
+export type GlobalRole = (typeof GLOBAL_ROLES)[number];
+
 export const PROJECT_TYPES = ['WEB', 'MOBILE_APP', 'DESKTOP', 'API', 'AI', 'OTHER'] as const;
 export type ProjectType = (typeof PROJECT_TYPES)[number];
 
@@ -70,6 +73,7 @@ export interface AuthUser {
   fullName: string;
   email: string;
   status: UserStatus;
+  role: GlobalRole;
   createdAt: string;
   updatedAt: string;
 }
@@ -268,6 +272,20 @@ export interface CommentDto {
   authorName: string;
   authorId: string;
   isEdited: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/* ── Admin ────────────────────────────────────────────────────────────── */
+
+/** `GET /api/admin/users` → `listUsersService` */
+export interface AdminUserListItem {
+  id: string;
+  fullName: string;
+  email: string;
+  status: UserStatus;
+  role: GlobalRole;
+  projectCount: number;
   createdAt: string;
   updatedAt: string;
 }

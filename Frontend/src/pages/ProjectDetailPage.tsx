@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Kanban,
@@ -40,6 +40,8 @@ type IssueModalState = { mode: 'create' } | { mode: 'edit'; issue: IssueListItem
 export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
   const { user } = useAuth();
   const { showToast } = useToast();
   const { selectProject } = useActiveProjectContext();
@@ -62,8 +64,9 @@ export function ProjectDetailPage() {
     refetch: refetchProject,
   } = useProject(projectId);
   const role = useProjectRole(project);
-  const isLeader = role === 'PROJECT_LEADER';
-  const isMember = role !== null;
+  const isAdmin = user?.role === 'ADMIN';
+  const isLeader = role === 'PROJECT_LEADER' || isAdmin;
+  const isMember = role !== null || isAdmin;
 
   const { data: tasks, isLoading: tasksLoading } = useTasks(isMember ? projectId : undefined);
   const { data: issues, isLoading: issuesLoading } = useIssues(isMember ? projectId : undefined);
@@ -163,7 +166,7 @@ export function ProjectDetailPage() {
         href="#"
         onClick={(event) => {
           event.preventDefault();
-          navigate('/projects');
+          navigate(isAdminRoute ? '/admin/projects' : '/projects');
         }}
         style={{
           fontSize: 13,

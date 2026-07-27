@@ -5,6 +5,8 @@ import * as userRepository from "../../repositories/user.repository.js";
 import {
   createProjectService,
   addMemberToProjectService,
+  deleteProjectService,
+  listProjectsService,
   updateProjectService,
   removeMemberFromProjectService,
 } from "../../services/project.service.js";
@@ -55,6 +57,49 @@ describe("project.service", () => {
     });
   });
 
+  describe("listProjectsService", () => {
+    it("calls findAllProjectsWithStats when the requester is an admin", async () => {
+      vi.mocked(projectRepository.findAllProjectsWithStats).mockResolvedValue([]);
+
+      await listProjectsService("admin-1", true);
+
+      expect(projectRepository.findAllProjectsWithStats).toHaveBeenCalled();
+      expect(projectRepository.findProjectsForUser).not.toHaveBeenCalled();
+    });
+
+    it("calls findProjectsForUser when the requester is not an admin", async () => {
+      vi.mocked(projectRepository.findProjectsForUser).mockResolvedValue([]);
+
+      await listProjectsService("user-1", false);
+
+      expect(projectRepository.findProjectsForUser).toHaveBeenCalledWith("user-1");
+      expect(projectRepository.findAllProjectsWithStats).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("deleteProjectService", () => {
+    it("throws 403 when the requester is not an admin", async () => {
+      await expect(deleteProjectService("p1", "USER")).rejects.toThrow(
+        "Only an admin can delete a project",
+      );
+    });
+
+    it("throws 404 when the project does not exist", async () => {
+      vi.mocked(projectRepository.findProjectById).mockResolvedValue(null);
+
+      await expect(deleteProjectService("p1", "ADMIN")).rejects.toThrow("Project not found");
+    });
+
+    it("deletes the project when the requester is an admin", async () => {
+      vi.mocked(projectRepository.findProjectById).mockResolvedValue({ id: "p1" } as never);
+      vi.mocked(projectRepository.deleteProjectById).mockResolvedValue({} as never);
+
+      await deleteProjectService("p1", "ADMIN");
+
+      expect(projectRepository.deleteProjectById).toHaveBeenCalledWith("p1");
+    });
+  });
+
   describe("removeMemberFromProjectService", () => {
     it ("throws 403 when requester is not the leader", async () => {
       vi.mocked(projectRepository.findProjectMember).mockResolvedValueOnce(memberMembership as never);
@@ -62,6 +107,17 @@ describe("project.service", () => {
       await expect(
         removeMemberFromProjectService("p1", "member-2", "member-1"),
       ).rejects.toThrow(AppError);
+    });
+
+    it("allows an admin to remove a member even without a membership row of their own", async () => {
+      vi.mocked(projectRepository.findProjectMember)
+        .mockResolvedValueOnce(null as never) // requester has no membership at all
+        .mockResolvedValueOnce(memberMembership as never); // target is a regular member
+      vi.mocked(projectRepository.removeProjectMember).mockResolvedValue({} as never);
+
+      await removeMemberFromProjectService("p1", "member-1", "admin-1", "ADMIN");
+
+      expect(projectRepository.removeProjectMember).toHaveBeenCalledWith("p1", "member-1");
     });
 
     it("throws 404 when target is not a member of the project", async () => {
@@ -146,6 +202,20 @@ describe("project.service", () => {
         expect.objectContaining({ projectId: "p1", userId: "new-user", projectRole: "MEMBER", position: "TESTER" }),
       );
     });
+
+    it("allows an admin to add a member even without a membership row of their own", async () => {
+      vi.mocked(projectRepository.findProjectMember)
+        .mockResolvedValueOnce(null as never) // requester has no membership at all
+        .mockResolvedValueOnce(null as never); // not yet a member
+      vi.mocked(userRepository.findUserById).mockResolvedValue({ id: "new-user" } as never);
+      vi.mocked(projectRepository.addProjectMember).mockResolvedValue({} as never);
+
+      await addMemberToProjectService("p1", { userId: "new-user", position: "TESTER" }, "admin-1", "ADMIN");
+
+      expect(projectRepository.addProjectMember).toHaveBeenCalledWith(
+        expect.objectContaining({ projectId: "p1", userId: "new-user" }),
+      );
+    });
   });
 
   describe("updateProjectService", () => {
@@ -194,6 +264,19 @@ describe("project.service", () => {
       vi.mocked(projectRepository.updateProject).mockResolvedValue({} as never);
 
       await updateProjectService("p1", { status: "IN_PROGRESS" }, "leader-1");
+
+      expect(projectRepository.updateProject).toHaveBeenCalledWith(
+        "p1",
+        expect.objectContaining({ status: "IN_PROGRESS" }),
+      );
+    });
+
+    it("allows an admin to update a project they are not a member of", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValueOnce(null as never);
+      vi.mocked(projectRepository.findProjectById).mockResolvedValue(currentProject as never);
+      vi.mocked(projectRepository.updateProject).mockResolvedValue({} as never);
+
+      await updateProjectService("p1", { status: "IN_PROGRESS" }, "admin-1", "ADMIN");
 
       expect(projectRepository.updateProject).toHaveBeenCalledWith(
         "p1",

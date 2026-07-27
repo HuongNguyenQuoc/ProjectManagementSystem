@@ -1,10 +1,9 @@
 import { AppError } from "../errors/appError.js";
+import type { GlobalRole } from "../generated/prisma/enums.js";
 import { findIssuesByProjectId } from "../repositories/issue.repositories.js";
-import {
-  findProjectById,
-  findProjectMember,
-} from "../repositories/project.repository.js";
+import { findProjectById } from "../repositories/project.repository.js";
 import { findTasksByProjectId } from "../repositories/task.repository.js";
+import { getProjectAccess } from "./projectAccess.js";
 
 const countBy = <T, K extends string | number | symbol>(
   items: T[],
@@ -23,9 +22,10 @@ const countBy = <T, K extends string | number | symbol>(
 export const getProjectDashboardService = async (
   projectId: string,
   userId: string,
+  requesterRole: GlobalRole = "USER",
 ) => {
-  const requesterMembership = await findProjectMember(projectId, userId);
-  if (!requesterMembership || requesterMembership.projectRole !== "PROJECT_LEADER") {
+  const { isLeader } = await getProjectAccess(projectId, userId, requesterRole);
+  if (!isLeader) {
     throw new AppError(403, "Only the project leader can view the dashboard");
   }
 

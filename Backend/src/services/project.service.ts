@@ -1,16 +1,19 @@
 import { AppError } from "../errors/appError.js";
-import { MemberPosition, ProjectType, ProjectStatus } from "../generated/prisma/enums.js";
+import { MemberPosition, ProjectType, ProjectStatus, type GlobalRole } from "../generated/prisma/enums.js";
 import { prisma } from "../lib/prisma.js";
 import {
   addProjectMember,
   createProject,
+  deleteProjectById,
   findAllProjectsWithStats,
   findProjectById,
   findProjectMember,
+  findProjectsForUser,
   updateProject,
   removeProjectMember,
 } from "../repositories/project.repository.js";
 import { findUserById } from "../repositories/user.repository.js";
+import { getProjectAccess } from "./projectAccess.js";
 
 interface CreateProjectInput {
   name: string;
@@ -34,13 +37,11 @@ export const addMemberToProjectService = async (
   projectId: string,
   input: { userId: string; position: string },
   requesterId: string,
+  requesterRole: GlobalRole = "USER",
 ) => {
   // Implementation for adding member to project
-  const requesterMembership = await findProjectMember(projectId, requesterId);
-  if (
-    !requesterMembership ||
-    requesterMembership.projectRole !== "PROJECT_LEADER"
-  ) {
+  const { isLeader } = await getProjectAccess(projectId, requesterId, requesterRole);
+  if (!isLeader) {
     throw new AppError(
       403,
       "You are not authorized to add members to this project",
@@ -76,13 +77,10 @@ export const removeMemberFromProjectService = async (
   projectId: string,
   userId: string,
   requesterId: string,
-
+  requesterRole: GlobalRole = "USER",
 ) => {
-  const requesterMembership = await findProjectMember(projectId, requesterId);
-  if (
-    !requesterMembership ||
-    requesterMembership.projectRole !== "PROJECT_LEADER"
-  ) {
+  const { isLeader } = await getProjectAccess(projectId, requesterId, requesterRole);
+  if (!isLeader) {
     throw new AppError(
       403,
       "You are not authorized to remove members from this project",
@@ -145,8 +143,10 @@ export const createProjectService = async (
   });
 };
 
-export const listProjectsService = async () => {
-  const projects = await findAllProjectsWithStats();
+export const listProjectsService = async (requesterId: string, isAdmin: boolean) => {
+  const projects = isAdmin
+    ? await findAllProjectsWithStats()
+    : await findProjectsForUser(requesterId);
 
   return projects.map((project) => {
     const totalTask = project.tasks.length;
@@ -175,9 +175,10 @@ export const listProjectsService = async () => {
 export const getProjectDetailService = async (
   projectId: string,
   requesterId: string,
+  requesterRole: GlobalRole = "USER",
 ) => {
-  const requesterMembership = await findProjectMember(projectId, requesterId);
-  if (!requesterMembership) {
+  const { isMember } = await getProjectAccess(projectId, requesterId, requesterRole);
+  if (!isMember) {
     throw new AppError(403, "You are not authorized to view this project");
   }
 
@@ -219,9 +220,10 @@ export const updateProjectService = async (
   projectId: string,
   input: UpdateProjectInput,
   requesterId: string,
+  requesterRole: GlobalRole = "USER",
 ) => {
-  const requesterMembership = await findProjectMember(projectId, requesterId);
-  if (!requesterMembership || requesterMembership.projectRole !== "PROJECT_LEADER") {
+  const { isLeader } = await getProjectAccess(projectId, requesterId, requesterRole);
+  if (!isLeader) {
     throw new AppError(403, "You are not authorized to update this project");
   }
 
@@ -251,6 +253,23 @@ export const updateProjectService = async (
     ...(input.projectType !== undefined && { projectType: input.projectType as ProjectType }),
     ...(input.startDate !== undefined && { startDate: nextStartDate }),
     ...(input.endDate !== undefined && { endDate: nextEndDate }),
-    ...(input.status !== undefined && { status: input.status as ProjectStatus }),   
+    ...(input.status !== undefined && { status: input.status as ProjectStatus }),
   })
+};
+
+/** Admin-only — no leader-level delete exists today. */
+export const deleteProjectService = async (
+  projectId: string,
+  requesterRole: GlobalRole = "USER",
+) => {
+  if (requesterRole !== "ADMIN") {
+    throw new AppError(403, "Only an admin can delete a project");
+  }
+
+  const project = await findProjectById(projectId);
+  if (!project) {
+    throw new AppError(404, "Project not found");
+  }
+
+  return deleteProjectById(projectId);
 };

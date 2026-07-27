@@ -70,6 +70,18 @@ describe("task.service", () => {
 
       expect(taskRepository.addTaskAssignee).not.toHaveBeenCalled();
     });
+
+    it("allows an admin to create a task without a membership row of their own", async () => {
+      vi.mocked(projectRepository.findProjectMember).mockResolvedValueOnce(null as never);
+      vi.mocked(taskRepository.createTask).mockResolvedValue({ id: "task-1" } as never);
+
+      await createTaskService("p1", { title: "Task A" }, "admin-1", "ADMIN");
+
+      expect(taskRepository.createTask).toHaveBeenCalledWith(
+        expect.objectContaining({ projectId: "p1", title: "Task A", createdBy: "admin-1" }),
+        undefined,
+      );
+    });
   });
 
   describe("listTasksByProjectService", () => {

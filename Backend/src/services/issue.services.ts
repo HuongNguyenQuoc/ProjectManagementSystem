@@ -1,5 +1,6 @@
 import { AppError } from "../errors/appError.js";
 import { IssueSeverity, IssueStatus, Prisma } from "../generated/prisma/client.js";
+import type { GlobalRole } from "../generated/prisma/enums.js";
 import {
   createIssue,
   deleteIssueRepository,
@@ -9,6 +10,7 @@ import {
 } from "../repositories/issue.repositories.js";
 import { findProjectMember } from "../repositories/project.repository.js";
 import { findTaskById } from "../repositories/task.repository.js";
+import { getProjectAccess } from "./projectAccess.js";
 
 interface CreateIssueInput {
   title: string;
@@ -36,9 +38,10 @@ export const updateIssueService = async (
   issueId: string,
   input: UpdateIssueInput,
   requesterId: string,
+  requesterRole: GlobalRole = "USER",
 ) => {
-  const requesterMembership = await findProjectMember(projectId, requesterId);
-  if (!requesterMembership) {
+  const { isMember, isLeader } = await getProjectAccess(projectId, requesterId, requesterRole);
+  if (!isMember) {
     throw new AppError(
       403,
       "You are not authorized to update issues in this project",
@@ -50,7 +53,6 @@ export const updateIssueService = async (
     throw new AppError(404, "Issue not found in this project");
   }
 
-  const isLeader = requesterMembership.projectRole === "PROJECT_LEADER";
   const isReporter = issue.reportedBy === requesterId;
 
   if (!isLeader && !isReporter) {
@@ -123,9 +125,10 @@ export const deleteIssueService = async (
   projectId: string,
   issueId: string,
   requesterId: string,
+  requesterRole: GlobalRole = "USER",
 ) => {
-  const requesterMembership = await findProjectMember(projectId, requesterId);
-  if (!requesterMembership) {
+  const { isMember, isLeader } = await getProjectAccess(projectId, requesterId, requesterRole);
+  if (!isMember) {
     throw new AppError(
       403,
       "You are not authorized to delete issues in this project",
@@ -137,7 +140,6 @@ export const deleteIssueService = async (
     throw new AppError(404, "Issue not found in this project");
   }
 
-  const isLeader = requesterMembership.projectRole === "PROJECT_LEADER";
   const isReporter = issue.reportedBy === requesterId;
 
   if (!isLeader && !isReporter) {
@@ -151,9 +153,10 @@ export const createIssueService = async (
   projectId: string,
   input: CreateIssueInput,
   requesterId: string,
+  requesterRole: GlobalRole = "USER",
 ) => {
-  const requesterMembership = await findProjectMember(projectId, requesterId);
-  if (!requesterMembership) {
+  const { isMember } = await getProjectAccess(projectId, requesterId, requesterRole);
+  if (!isMember) {
     throw new AppError(403, "You are not belong to this project");
   }
   if (!input.title || !input.description) {
@@ -184,9 +187,10 @@ export const createIssueService = async (
 export const listIssuesByProjectService = async (
   projectId: string,
   requesterId: string,
+  requesterRole: GlobalRole = "USER",
 ) => {
-  const requesterMembership = await findProjectMember(projectId, requesterId);
-  if (!requesterMembership) {
+  const { isMember } = await getProjectAccess(projectId, requesterId, requesterRole);
+  if (!isMember) {
     throw new AppError(403, "You are not belong to this project");
   }
 

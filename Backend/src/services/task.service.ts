@@ -1,8 +1,9 @@
 import { AppError } from "../errors/appError.js";
 import { Prisma } from "../generated/prisma/client.js";
-import { TaskPriority, TaskStatus } from "../generated/prisma/enums.js";
+import { TaskPriority, TaskStatus, type GlobalRole } from "../generated/prisma/enums.js";
 import { prisma } from "../lib/prisma.js";
 import { findProjectMember } from "../repositories/project.repository.js";
+import { getProjectAccess } from "./projectAccess.js";
 import {
   addTaskAssignee,
   createTask,
@@ -31,14 +32,12 @@ export const createTaskService = async (
   projectId: string,
   input: CreateTaskInput,
   creatorId: string,
+  requesterRole: GlobalRole = "USER",
 ) => {
   if (!input.title) throw new AppError(400, "Task title is required");
 
-  const requesterMembership = await findProjectMember(projectId, creatorId);
-  if (
-    !requesterMembership ||
-    requesterMembership.projectRole !== "PROJECT_LEADER"
-  ) {
+  const { isLeader } = await getProjectAccess(projectId, creatorId, requesterRole);
+  if (!isLeader) {
     throw new AppError(
       403,
       "You are not authorized to create tasks in this project",
@@ -86,9 +85,10 @@ export const createTaskService = async (
 export const listTasksByProjectService = async (
   projectId: string,
   requesterId: string,
+  requesterRole: GlobalRole = "USER",
 ) => {
-  const requesterMembership = await findProjectMember(projectId, requesterId);
-  if (!requesterMembership) {
+  const { isMember } = await getProjectAccess(projectId, requesterId, requesterRole);
+  if (!isMember) {
     throw new AppError(
       403,
       "You are not authorized to view tasks in this project",
@@ -118,10 +118,11 @@ export const updateTaskService = async (
   taskId: string,
   input: UpdateTaskInput,
   requesterId: string,
-  projectId: string
+  projectId: string,
+  requesterRole: GlobalRole = "USER",
 ) => {
-  const requesterMembership = await findProjectMember(projectId, requesterId);
-  if (!requesterMembership) {
+  const { isMember, isLeader } = await getProjectAccess(projectId, requesterId, requesterRole);
+  if (!isMember) {
     throw new AppError(403, "You are not authorized to update tasks in this project");
   }
 
@@ -130,7 +131,6 @@ export const updateTaskService = async (
     throw new AppError(404, "Task not found");
   }
 
-  const isLeader = requesterMembership.projectRole === "PROJECT_LEADER";
   const isAssignee = task.assignees.some((a) => a.userId === requesterId);
 
   if (!isLeader && !isAssignee) {

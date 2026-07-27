@@ -46,6 +46,32 @@ export const findAllProjectsWithStats = () => {
   });
 };
 
+export const findProjectsForUser = (userId: string) => {
+  return prisma.project.findMany({
+    where: {
+      members: { some: { userId } },
+    },
+    include: {
+      members: {
+        where: { projectRole: "PROJECT_LEADER" },
+        include: {
+          user: true,
+        }
+      },
+      tasks: {
+        select: { status: true },
+      },
+    },
+    orderBy: {
+      createdAt: "desc"
+    },
+  });
+};
+
+export const deleteProjectById = (projectId: string) => {
+  return prisma.project.delete({ where: { id: projectId } });
+};
+
 export const findProjectMember = (projectId: string, userId: string) => {
   return prisma.projectMember.findUnique({
     where: {

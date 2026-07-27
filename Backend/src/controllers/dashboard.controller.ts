@@ -9,6 +9,7 @@ export const getProjectDashboardController = async (
   const dashboard = await getProjectDashboardService(
     req.params.projectId as string,
     req.userId as string,
+    req.userRole,
   );
   res.status(200).json({
     success: true,

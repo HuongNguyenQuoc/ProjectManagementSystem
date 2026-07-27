@@ -1,9 +1,10 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   ChartPieSlice,
   Folders,
   Kanban,
   ListChecks,
+  ShieldCheck,
   SignOut,
   UsersThree,
   WarningCircle,
@@ -49,14 +50,20 @@ function NavItem({
 
 /**
  * Leader/Member nav differs by the active project's role (see
- * ActiveProjectProvider) — there is no global role in this backend, only
- * per-project membership.
+ * ActiveProjectProvider) — that's per-project membership. Separately, a user's
+ * global `role` (ADMIN | USER) gates the `/admin` area, linked below.
  */
 export function Sidebar() {
   const { user, signOut } = useAuth();
   const { projects, activeProjectId, activeRole } = useActiveProjectContext();
+  const location = useLocation();
   const isLeader = activeRole === 'PROJECT_LEADER';
   const projectPath = activeProjectId ? `/projects/${activeProjectId}` : '/projects';
+  // "activeRole" falls back to an arbitrary project (persisted, else the
+  // first one) whenever no specific project is open — showing it on general
+  // pages (Projects list, Dashboard, My Tasks) would misleadingly look like
+  // account-wide info. Only show it while actually viewing one project.
+  const isViewingSpecificProject = /^\/projects\/[^/]+$/.test(location.pathname);
 
   return (
     <aside
@@ -124,14 +131,19 @@ export function Sidebar() {
             {user?.fullName}
           </div>
           <div style={{ fontSize: 11, color: 'var(--color-accent-300)' }}>
-            {activeRole ? PROJECT_ROLE_LABEL[activeRole] : '—'}
+            {isViewingSpecificProject && activeRole ? PROJECT_ROLE_LABEL[activeRole] : ' '}
           </div>
         </div>
+        {user?.role === 'ADMIN' ? (
+          <NavLink to="/admin" title="Admin area" style={{ marginLeft: 'auto', color: 'var(--color-neutral-300)' }}>
+            <ShieldCheck size={18} />
+          </NavLink>
+        ) : null}
         <Button
           variant="icon"
           onClick={() => void signOut()}
           title="Sign out"
-          style={{ marginLeft: 'auto' }}
+          style={user?.role === 'ADMIN' ? undefined : { marginLeft: 'auto' }}
         >
           <SignOut size={16} />
         </Button>

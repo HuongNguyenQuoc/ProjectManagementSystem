@@ -3,6 +3,7 @@ import { AuthRequest } from "../middlewares/requireAuth.js";
 import {
   addMemberToProjectService,
   createProjectService,
+  deleteProjectService,
   getProjectDetailService,
   listProjectsService,
   updateProjectService,
@@ -22,10 +23,13 @@ export const createProjectController = async (
 };
 
 export const listProjectsController = async (
-  _req: AuthRequest,
+  req: AuthRequest,
   res: Response,
 ) => {
-  const projects = await listProjectsService();
+  const projects = await listProjectsService(
+    req.userId as string,
+    req.userRole === "ADMIN",
+  );
   res.status(200).json({
     success: true,
     message: "Projects retrieved successfully",
@@ -41,6 +45,7 @@ export const addMemberToProjectController = async (
     req.params.projectId as string,
     req.body,
     req.userId as string,
+    req.userRole,
   );
   res.status(200).json({
     success: true,
@@ -56,6 +61,7 @@ export const getProjectByIdController = async (
   const project = await getProjectDetailService(
     req.params.projectId as string,
     req.userId as string,
+    req.userRole,
   );
   res.status(200).json({
     success: true,
@@ -66,7 +72,7 @@ export const getProjectByIdController = async (
 
 export const updateProjectController = async (req: AuthRequest, res: Response) => {
   const updatedProject = await updateProjectService(req.params.projectId as string, req.body,
-    req.userId as string);
+    req.userId as string, req.userRole);
   res.status(200).json({
     success: true,
     message: "Project updated successfully",
@@ -75,10 +81,19 @@ export const updateProjectController = async (req: AuthRequest, res: Response) =
 }
 
 export const removeMemberFromProjectController = async (req: AuthRequest, res: Response) => {
-  const removeMember = await removeMemberFromProjectService(req.params.projectId as string, req.params.userId as string, req.userId as string);
+  const removeMember = await removeMemberFromProjectService(req.params.projectId as string, req.params.userId as string, req.userId as string, req.userRole);
   res.status(200).json({
     success: true,
     message: "Member removed from project successfully",
     data: removeMember,
+  });
+};
+
+export const deleteProjectController = async (req: AuthRequest, res: Response) => {
+  const deletedProject = await deleteProjectService(req.params.projectId as string, req.userRole);
+  res.status(200).json({
+    success: true,
+    message: "Project deleted successfully",
+    data: deletedProject,
   });
 };

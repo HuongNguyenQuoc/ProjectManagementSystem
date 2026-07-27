@@ -9,6 +9,7 @@ import {
   PlugsConnected,
 } from '@phosphor-icons/react';
 import type {
+  GlobalRole,
   IssueSeverity,
   IssueStatus,
   MemberPosition,
@@ -16,6 +17,7 @@ import type {
   ProjectType,
   TaskPriority,
   TaskStatus,
+  UserStatus,
 } from '@/types/api';
 
 /* ── Tag recipes ──────────────────────────────────────────────────────── */
@@ -132,6 +134,19 @@ export const PROJECT_ROLE_LABEL = {
   PROJECT_LEADER: 'Project Leader',
   MEMBER: 'Member',
 } as const;
+
+/* ── Admin ────────────────────────────────────────────────────────────── */
+
+export const USER_STATUS: Record<UserStatus, { label: string; tag: CSSProperties }> = {
+  ACTIVE: { label: 'Active', tag: tagSuccess },
+  INACTIVE: { label: 'Inactive', tag: tagNeutral },
+  BLOCKED: { label: 'Blocked', tag: tagDanger },
+};
+
+export const GLOBAL_ROLE_LABEL: Record<GlobalRole, { label: string; tag: CSSProperties }> = {
+  ADMIN: { label: 'Admin', tag: tagAccent },
+  USER: { label: 'User', tag: tagNeutral },
+};
 
 /** Convenience for `<select>` lists built from a label map. */
 export function toOptions<K extends string>(
