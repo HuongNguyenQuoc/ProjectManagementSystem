@@ -1,0 +1,9 @@
+# Ignore environment variable files
+.env
+.env.*.local
+/src/generated/prisma
+/node_modules
+
+# Build output & test coverage
+/dist
+/coverage
