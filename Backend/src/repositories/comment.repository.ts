@@ -2,7 +2,7 @@ import { Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../lib/prisma.js";
 
 export const createComment = (data: Prisma.CommentUncheckedCreateInput) => {
-  return prisma.comment.create({ data });
+  return prisma.comment.create({ data, include: { user: true } });
 };
 
 export const findCommentsByTaskId = (taskId: string) => {

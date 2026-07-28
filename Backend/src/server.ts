@@ -1,4 +1,6 @@
+import { createServer } from "http";
 import { connectDatabase, disconnectDatabase } from "./lib/prisma.js";
+import { initSocket } from "./lib/socket.js";
 import { PORT } from "../config/env.js";
 import app from "./app.js";
 
@@ -6,7 +8,10 @@ const startServer = async () => {
   try {
     await connectDatabase();
 
-    const server = app.listen(PORT, () => {
+    const httpServer = createServer(app);
+    initSocket(httpServer);
+
+    const server = httpServer.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
 

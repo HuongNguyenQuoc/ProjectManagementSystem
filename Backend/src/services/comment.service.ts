@@ -3,6 +3,35 @@ import type { GlobalRole } from "../generated/prisma/enums.js";
 import { findTaskById } from "../repositories/task.repository.js";
 import { createComment, findCommentsByTaskId } from "../repositories/comment.repository.js";
 import { getProjectAccess } from "./projectAccess.js";
+import { emitNewComment } from "../lib/socket.js";
+
+export interface CommentDto {
+  id: string;
+  content: string;
+  authorName: string;
+  authorId: string;
+  isEdited: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const toCommentDto = (comment: {
+  id: string;
+  content: string;
+  userId: string;
+  isEdited: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  user: { fullName: string };
+}): CommentDto => ({
+  id: comment.id,
+  content: comment.content,
+  authorName: comment.user.fullName,
+  authorId: comment.userId,
+  isEdited: comment.isEdited,
+  createdAt: comment.createdAt,
+  updatedAt: comment.updatedAt,
+});
 
 const assertTaskInProject = async (
   projectId: string,
@@ -34,11 +63,15 @@ export const createCommentService = async (
     throw new AppError(400, "Comment content cannot be empty");
   }
 
-  return await createComment({
+  const comment = await createComment({
     taskId,
     userId: requesterId,
     content: input.content.trim()
   });
+
+  const dto = toCommentDto(comment);
+  emitNewComment(taskId, dto);
+  return dto;
 };
 
 export const listCommentsByTaskService = async (
@@ -51,13 +84,5 @@ export const listCommentsByTaskService = async (
 
   const comments = await findCommentsByTaskId(taskId);
 
-  return comments.map((comment) => ({
-    id: comment.id,
-    content: comment.content,
-    authorName: comment.user.fullName,
-    authorId: comment.userId,
-    isEdited: comment.isEdited,
-    createdAt: comment.createdAt,
-    updatedAt: comment.updatedAt,
-  }));
+  return comments.map(toCommentDto);
 };

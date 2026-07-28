@@ -47,7 +47,9 @@ describe("comment.service", () => {
     it("trims content before saving", async () => {
       vi.mocked(projectRepository.findProjectMember).mockResolvedValue(memberMembership as never);
       vi.mocked(taskRepository.findTaskById).mockResolvedValue(taskInProject as never);
-      vi.mocked(commentRepository.createComment).mockResolvedValue({} as never);
+      vi.mocked(commentRepository.createComment).mockResolvedValue({
+        user: { fullName: "Member One" },
+      } as never);
 
       await createCommentService("p1", "task-1", { content: "  hello  " }, "member-1");
 
@@ -59,7 +61,9 @@ describe("comment.service", () => {
     it("allows an admin to comment without a membership row of their own", async () => {
       vi.mocked(projectRepository.findProjectMember).mockResolvedValue(null as never);
       vi.mocked(taskRepository.findTaskById).mockResolvedValue(taskInProject as never);
-      vi.mocked(commentRepository.createComment).mockResolvedValue({} as never);
+      vi.mocked(commentRepository.createComment).mockResolvedValue({
+        user: { fullName: "Admin" },
+      } as never);
 
       await createCommentService("p1", "task-1", { content: "hi" }, "admin-1", "ADMIN");
 
