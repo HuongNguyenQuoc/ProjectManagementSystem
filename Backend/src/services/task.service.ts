@@ -9,8 +9,55 @@ import {
   createTask,
   findTasksByProjectId,
   findTaskById,
+  findTaskWithAssigneeById,
   updateTask
 } from "../repositories/task.repository.js";
+import { emitTaskCreated, emitTaskUpdated } from "../lib/socket.js";
+
+export interface TaskListItemDto {
+  id: string;
+  title: string;
+  description: string | null;
+  priority: TaskPriority;
+  status: TaskStatus;
+  progress: number;
+  assigneeId: string | null;
+  assigneeName: string | null;
+  startDate: Date | null;
+  dueDate: Date | null;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const toTaskListItem = (task: {
+  id: string;
+  title: string;
+  description: string | null;
+  priority: TaskPriority;
+  status: TaskStatus;
+  progress: number;
+  startDate: Date | null;
+  dueDate: Date | null;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  assignees: { userId: string; user: { fullName: string } }[];
+}): TaskListItemDto => ({
+  id: task.id,
+  title: task.title,
+  description: task.description,
+  priority: task.priority,
+  status: task.status,
+  progress: task.progress,
+  assigneeId: task.assignees[0]?.userId ?? null,
+  assigneeName: task.assignees[0]?.user?.fullName ?? null,
+  startDate: task.startDate,
+  dueDate: task.dueDate,
+  createdBy: task.createdBy,
+  createdAt: task.createdAt,
+  updatedAt: task.updatedAt,
+});
 
 interface CreateTaskInput {
   title: string;
@@ -54,8 +101,8 @@ export const createTaskService = async (
     }
   }
 
-  return prisma.$transaction(async (tx) => {
-    const task = await createTask(
+  const task = await prisma.$transaction(async (tx) => {
+    const createdTask = await createTask(
       {
         projectId,
         title: input.title,
@@ -71,15 +118,20 @@ export const createTaskService = async (
     if (input.assigneeId) {
       await addTaskAssignee(
         {
-          taskId: task.id,
+          taskId: createdTask.id,
           userId: input.assigneeId,
           assignedBy: creatorId,
         },
         tx,
       );
     }
-    return task;
+    return createdTask;
   });
+
+  const enrichedTask = await findTaskWithAssigneeById(task.id);
+  const dto = toTaskListItem(enrichedTask!);
+  emitTaskCreated(projectId, dto);
+  return dto;
 };
 
 export const listTasksByProjectService = async (
@@ -97,21 +149,7 @@ export const listTasksByProjectService = async (
 
   const tasks = await findTasksByProjectId(projectId);
 
-  return tasks.map((task) => ({
-    id: task.id,
-    title: task.title,
-    description: task.description,
-    priority: task.priority,
-    status: task.status,
-    progress: task.progress,
-    assigneeId: task.assignees[0]?.userId ?? null,
-    assigneeName: task.assignees[0]?.user?.fullName ?? null,
-    startDate: task.startDate,
-    dueDate: task.dueDate,
-    createdBy: task.createdBy,
-    createdAt: task.createdAt,
-    updatedAt: task.updatedAt,
-  }));
+  return tasks.map(toTaskListItem);
 };
 
 export const updateTaskService = async (
@@ -165,5 +203,9 @@ export const updateTaskService = async (
       data.dueDate = new Date(input.dueDate);
     }
   }
-  return updateTask(taskId, data);
+
+  const updated = await updateTask(taskId, data);
+  const dto = toTaskListItem(updated);
+  emitTaskUpdated(projectId, dto);
+  return dto;
 }

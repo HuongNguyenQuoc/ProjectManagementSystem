@@ -38,6 +38,13 @@ export const findTaskById = (taskId: string) => {
   });
 };
 
+export const findTaskWithAssigneeById = (taskId: string) => {
+  return prisma.task.findUnique({
+    where: { id: taskId },
+    include: { assignees: { include: { user: true } } },
+  });
+};
+
 export const updateTask = (
   taskId: string,
   data: Prisma.TaskUncheckedUpdateInput,
@@ -45,5 +52,6 @@ export const updateTask = (
   return prisma.task.update({
     where: { id: taskId },
     data,
+    include: { assignees: { include: { user: true } } },
   });
 };

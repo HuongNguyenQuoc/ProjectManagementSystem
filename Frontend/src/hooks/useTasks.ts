@@ -2,14 +2,44 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import * as tasksApi from '@/api/tasks';
 import { qk } from '@/lib/queryClient';
 import type { CreateTaskInput, TaskListItem, UpdateTaskInput } from '@/types/api';
+import { useEffect } from 'react';
+import { getSocket } from '@/lib/socket';
 
 export function useTasks(projectId: string | undefined) {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: qk.tasks(projectId ?? ''),
     queryFn: () => tasksApi.listTasks(projectId as string),
     enabled: Boolean(projectId),
   });
+
+  useEffect(() => {
+    if (!projectId) return;
+    const socket = getSocket();
+    socket.emit('join-project', { projectId });
+
+    function upsert(task: TaskListItem) {
+      queryClient.setQueryData<TaskListItem[]>(qk.tasks(projectId as string), (prev) => {
+        if (!prev) return [task];
+        const exists = prev.some((t) => t.id === task.id);
+        return exists ? prev.map((t) => (t.id === task.id ? task : t)) : [...prev, task];
+      });
+    }
+
+    socket.on('task:created',upsert);
+    socket.on('task:updated', upsert);
+
+    return () => {
+      socket.off('task:created', upsert);
+      socket.off('task:updated', upsert);
+      socket.emit('leave-project', { projectId });
+    };
+  }, [projectId, queryClient]);
+
+  return query;
 }
+
 
 /** A task mutation moves project progress too, so refresh every derived view. */
 function useTaskInvalidation(projectId: string) {

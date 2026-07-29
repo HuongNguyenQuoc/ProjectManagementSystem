@@ -2,7 +2,14 @@ import type { Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../lib/prisma.js";
 
 export const createIssue = async (data: Prisma.IssueUncheckedCreateInput) => {
-  return await prisma.issue.create({ data });
+  return await prisma.issue.create({
+    data,
+    include: {
+      reporter: true,
+      assignee: true,
+      task: { select: { id: true, title: true } },
+    },
+  });
 }
 
 export const findIssuesByProjectId = async (projectId: string) => {
@@ -27,6 +34,11 @@ export const updateIssueRepository = async (issueId: string, data: Prisma.IssueU
   return await prisma.issue.update({
     where: { id: issueId },
     data,
+    include: {
+      reporter: true,
+      assignee: true,
+      task: { select: { id: true, title: true } },
+    },
   });
 };
 

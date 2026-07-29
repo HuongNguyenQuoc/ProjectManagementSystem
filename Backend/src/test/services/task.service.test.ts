@@ -49,6 +49,10 @@ describe("task.service", () => {
         .mockResolvedValueOnce(memberMembership as never); // assignee check
       vi.mocked(taskRepository.createTask).mockResolvedValue({ id: "task-1" } as never);
       vi.mocked(taskRepository.addTaskAssignee).mockResolvedValue({} as never);
+      vi.mocked(taskRepository.findTaskWithAssigneeById).mockResolvedValue({
+        id: "task-1",
+        assignees: [{ userId: "member-1", user: { fullName: "Member One" } }],
+      } as never);
 
       await createTaskService("p1", { title: "Task A", assigneeId: "member-1" }, "leader-1");
 
@@ -65,6 +69,10 @@ describe("task.service", () => {
     it("does not call addTaskAssignee when no assigneeId is given", async () => {
       vi.mocked(projectRepository.findProjectMember).mockResolvedValueOnce(leaderMembership as never);
       vi.mocked(taskRepository.createTask).mockResolvedValue({ id: "task-1" } as never);
+      vi.mocked(taskRepository.findTaskWithAssigneeById).mockResolvedValue({
+        id: "task-1",
+        assignees: [],
+      } as never);
 
       await createTaskService("p1", { title: "Task A" }, "leader-1");
 
@@ -74,6 +82,10 @@ describe("task.service", () => {
     it("allows an admin to create a task without a membership row of their own", async () => {
       vi.mocked(projectRepository.findProjectMember).mockResolvedValueOnce(null as never);
       vi.mocked(taskRepository.createTask).mockResolvedValue({ id: "task-1" } as never);
+      vi.mocked(taskRepository.findTaskWithAssigneeById).mockResolvedValue({
+        id: "task-1",
+        assignees: [],
+      } as never);
 
       await createTaskService("p1", { title: "Task A" }, "admin-1", "ADMIN");
 
@@ -177,7 +189,7 @@ describe("task.service", () => {
     it("allows assignee to update progress", async () => {
       vi.mocked(projectRepository.findProjectMember).mockResolvedValue(memberMembership as never);
       vi.mocked(taskRepository.findTaskById).mockResolvedValue(existingTask as never);
-      vi.mocked(taskRepository.updateTask).mockResolvedValue({} as never);
+      vi.mocked(taskRepository.updateTask).mockResolvedValue({ assignees: [] } as never);
 
       await updateTaskService("task-1", { progress: 50 }, "member-1", "p1");
 
@@ -188,7 +200,7 @@ describe("task.service", () => {
     it("lets leader set status DONE and sets completedAt", async () => {
       vi.mocked(projectRepository.findProjectMember).mockResolvedValue(leaderMembership as never);
       vi.mocked(taskRepository.findTaskById).mockResolvedValue(existingTask as never);
-      vi.mocked(taskRepository.updateTask).mockResolvedValue({} as never);
+      vi.mocked(taskRepository.updateTask).mockResolvedValue({ assignees: [] } as never);
 
       await updateTaskService("task-1", { status: "DONE" }, "leader-1", "p1");
 
@@ -200,7 +212,7 @@ describe("task.service", () => {
     it("clears completedAt when leader moves status away from DONE", async () => {
       vi.mocked(projectRepository.findProjectMember).mockResolvedValue(leaderMembership as never);
       vi.mocked(taskRepository.findTaskById).mockResolvedValue(existingTask as never);
-      vi.mocked(taskRepository.updateTask).mockResolvedValue({} as never);
+      vi.mocked(taskRepository.updateTask).mockResolvedValue({ assignees: [] } as never);
 
       await updateTaskService("task-1", { status: "IN_PROGRESS" }, "leader-1", "p1");
 
@@ -211,7 +223,7 @@ describe("task.service", () => {
     it("lets leader update startDate", async () => {
       vi.mocked(projectRepository.findProjectMember).mockResolvedValue(leaderMembership as never);
       vi.mocked(taskRepository.findTaskById).mockResolvedValue(existingTask as never);
-      vi.mocked(taskRepository.updateTask).mockResolvedValue({} as never);
+      vi.mocked(taskRepository.updateTask).mockResolvedValue({ assignees: [] } as never);
 
       await updateTaskService("task-1", { startDate: "2026-08-01" }, "leader-1", "p1");
 
@@ -222,7 +234,7 @@ describe("task.service", () => {
     it("ignores status/startDate changes coming from a Member (only progress applies)", async () => {
       vi.mocked(projectRepository.findProjectMember).mockResolvedValue(memberMembership as never);
       vi.mocked(taskRepository.findTaskById).mockResolvedValue(existingTask as never);
-      vi.mocked(taskRepository.updateTask).mockResolvedValue({} as never);
+      vi.mocked(taskRepository.updateTask).mockResolvedValue({ assignees: [] } as never);
 
       await updateTaskService(
         "task-1",

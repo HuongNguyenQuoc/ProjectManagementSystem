@@ -11,6 +11,53 @@ import {
 import { findProjectMember } from "../repositories/project.repository.js";
 import { findTaskById } from "../repositories/task.repository.js";
 import { getProjectAccess } from "./projectAccess.js";
+import { emitIssueCreated, emitIssueDeleted, emitIssueUpdated } from "../lib/socket.js";
+
+export interface IssueListItemDto {
+  id: string;
+  title: string;
+  description: string;
+  severity: IssueSeverity;
+  status: IssueStatus;
+  taskId: string | null;
+  taskTitle: string | null;
+  reporterId: string;
+  reporterName: string;
+  assigneeId: string | null;
+  assigneeName: string | null;
+  resolvedAt: Date | null;
+  createdAt: Date;
+}
+
+const toIssueListItem = (issue: {
+  id: string;
+  title: string;
+  description: string;
+  severity: IssueSeverity;
+  status: IssueStatus;
+  taskId: string | null;
+  task: { id: string; title: string } | null;
+  reportedBy: string;
+  reporter: { fullName: string };
+  assignedTo: string | null;
+  assignee: { fullName: string } | null;
+  resolvedAt: Date | null;
+  createdAt: Date;
+}): IssueListItemDto => ({
+  id: issue.id,
+  title: issue.title,
+  description: issue.description,
+  severity: issue.severity,
+  status: issue.status,
+  taskId: issue.taskId,
+  taskTitle: issue.task?.title ?? null,
+  reporterId: issue.reportedBy,
+  reporterName: issue.reporter.fullName,
+  assigneeId: issue.assignedTo,
+  assigneeName: issue.assignee?.fullName ?? null,
+  resolvedAt: issue.resolvedAt,
+  createdAt: issue.createdAt,
+});
 
 interface CreateIssueInput {
   title: string;
@@ -117,7 +164,10 @@ export const updateIssueService = async (
     }
   }
 
-  return updateIssueRepository(issueId, data);
+  const updated = await updateIssueRepository(issueId, data);
+  const dto = toIssueListItem(updated);
+  emitIssueUpdated(projectId, dto);
+  return dto;
 };
 
 /** Leader may delete any issue in the project; a reporter may delete their own. */
@@ -146,7 +196,9 @@ export const deleteIssueService = async (
     throw new AppError(403, "You are not authorized to delete this issue");
   }
 
-  return deleteIssueRepository(issueId);
+  const deleted = await deleteIssueRepository(issueId);
+  emitIssueDeleted(projectId, issueId);
+  return deleted;
 };
 
 export const createIssueService = async (
@@ -174,7 +226,7 @@ export const createIssueService = async (
       throw new AppError(400, "Task does not belong to the project");
     }
   }
-  return createIssue({
+  const created = await createIssue({
     projectId,
     taskId: input.taskId ?? null,
     title: input.title,
@@ -182,6 +234,10 @@ export const createIssueService = async (
     severity: input.severity as IssueSeverity | undefined,
     reportedBy: requesterId,
   });
+
+  const dto = toIssueListItem(created);
+  emitIssueCreated(projectId, dto);
+  return dto;
 };
 
 export const listIssuesByProjectService = async (
@@ -196,19 +252,5 @@ export const listIssuesByProjectService = async (
 
   const issues = await findIssuesByProjectId(projectId);
 
-  return issues.map((issue) => ({
-    id: issue.id,
-    title: issue.title,
-    description: issue.description,
-    severity: issue.severity,
-    status: issue.status,
-    taskId: issue.taskId,
-    taskTitle: issue.task?.title ?? null,
-    reporterId: issue.reportedBy,
-    reporterName: issue.reporter.fullName,
-    assigneeId: issue.assignedTo,
-    assigneeName: issue.assignee?.fullName ?? null,
-    resolvedAt: issue.resolvedAt,
-    createdAt: issue.createdAt,
-  }));
+  return issues.map(toIssueListItem);
 };

@@ -66,7 +66,10 @@ describe("issue.services", () => {
 
     it("creates issue successfully", async () => {
       vi.mocked(projectRepository.findProjectMember).mockResolvedValue(memberMembership as never);
-      vi.mocked(issueRepository.createIssue).mockResolvedValue({ id: "i1" } as never);
+      vi.mocked(issueRepository.createIssue).mockResolvedValue({
+        id: "i1",
+        reporter: { fullName: "Member One" },
+      } as never);
 
       await createIssueService("p1", { title: "Bug A", description: "desc" }, "member-1");
 
@@ -77,7 +80,10 @@ describe("issue.services", () => {
 
     it("allows an admin to report an issue without a membership row of their own", async () => {
       vi.mocked(projectRepository.findProjectMember).mockResolvedValue(null as never);
-      vi.mocked(issueRepository.createIssue).mockResolvedValue({ id: "i1" } as never);
+      vi.mocked(issueRepository.createIssue).mockResolvedValue({
+        id: "i1",
+        reporter: { fullName: "Admin" },
+      } as never);
 
       await createIssueService("p1", { title: "Bug A", description: "desc" }, "admin-1", "ADMIN");
 
@@ -190,7 +196,9 @@ describe("issue.services", () => {
         reportedBy: "leader-1",
         status: "OPEN",
       } as never);
-      vi.mocked(issueRepository.updateIssueRepository).mockResolvedValue({} as never);
+      vi.mocked(issueRepository.updateIssueRepository).mockResolvedValue({
+        reporter: { fullName: "Someone" },
+      } as never);
 
       await updateIssueService("p1", "i1", { status: "RESOLVED" }, "leader-1");
 
@@ -207,7 +215,9 @@ describe("issue.services", () => {
         reportedBy: "leader-1",
         status: "RESOLVED",
       } as never);
-      vi.mocked(issueRepository.updateIssueRepository).mockResolvedValue({} as never);
+      vi.mocked(issueRepository.updateIssueRepository).mockResolvedValue({
+        reporter: { fullName: "Someone" },
+      } as never);
 
       await updateIssueService("p1", "i1", { status: "OPEN" }, "leader-1");
 
@@ -223,7 +233,9 @@ describe("issue.services", () => {
         reportedBy: "member-1",
         status: "OPEN",
       } as never);
-      vi.mocked(issueRepository.updateIssueRepository).mockResolvedValue({} as never);
+      vi.mocked(issueRepository.updateIssueRepository).mockResolvedValue({
+        reporter: { fullName: "Someone" },
+      } as never);
 
       await updateIssueService(
         "p1",
@@ -244,7 +256,9 @@ describe("issue.services", () => {
         reportedBy: "member-1",
         status: "OPEN",
       } as never);
-      vi.mocked(issueRepository.updateIssueRepository).mockResolvedValue({} as never);
+      vi.mocked(issueRepository.updateIssueRepository).mockResolvedValue({
+        reporter: { fullName: "Someone" },
+      } as never);
 
       await updateIssueService(
         "p1",
@@ -279,7 +293,9 @@ describe("issue.services", () => {
         reportedBy: "someone-else",
         status: "RESOLVED",
       } as never);
-      vi.mocked(issueRepository.updateIssueRepository).mockResolvedValue({} as never);
+      vi.mocked(issueRepository.updateIssueRepository).mockResolvedValue({
+        reporter: { fullName: "Someone" },
+      } as never);
 
       await updateIssueService("p1", "i1", { title: "Better title" }, "leader-1");
 
