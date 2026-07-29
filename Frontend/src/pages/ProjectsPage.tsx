@@ -11,11 +11,37 @@ import { ProjectFormModal } from '@/components/modals/ProjectFormModal';
 import { useActiveProjectContext } from '@/hooks/useActiveProjectContext';
 import { useProjects } from '@/hooks/useProjects';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { PROJECT_STATUS, PROJECT_TYPE } from '@/lib/constants';
+import { PROJECT_STATUS, PROJECT_TYPE, toOptions } from '@/lib/constants';
 import { formatDate, initials } from '@/lib/format';
 import { Folders } from '@phosphor-icons/react';
+import { PROJECT_STATUSES, PROJECT_TYPES, type ProjectStatus, type ProjectType } from '@/types/api';
 
 type ViewMode = 'grid' | 'table';
+
+interface FilterSelectProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  allLabel: string;
+}
+
+function FilterSelect({ value, onChange, options, allLabel }: FilterSelectProps) {
+  return (
+    <select
+      className='input'
+      style={{ height: 32, fontSize:13, padding: '0 8px' }}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    >
+      <option value="">{allLabel}</option>
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 export function ProjectsPage() {
   const navigate = useNavigate();
@@ -23,6 +49,9 @@ export function ProjectsPage() {
   const { data: projects, isLoading, isError, refetch } = useProjects();
   const [view, setView] = useState<ViewMode>('grid');
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<ProjectStatus | ''>('');
+  const [typeFilter, setTypeFilter] = useState<ProjectType | ''>('');
+  const [leaderFilter, setLeaderFilter] = useState<string>('');
   const [modalOpen, setModalOpen] = useState(false);
 
   usePageHeader({
@@ -31,11 +60,24 @@ export function ProjectsPage() {
     search: { value: search, onChange: setSearch, placeholder: 'Search projects…' },
   });
 
+  const leaderOptions = useMemo(() => {
+    const names = new Set<string>();
+    for (const project of projects ?? []) {
+      if (project.leaderName) names.add(project.leaderName);
+    }
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+  }, [projects]);
+
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return projects ?? [];
-    return (projects ?? []).filter((project) => project.name.toLowerCase().includes(query));
-  }, [projects, search]);
+    return (projects ?? []).filter((project) => {
+      if (query && !project.name.toLowerCase().includes(query)) return false;
+      if (statusFilter && project.status !== statusFilter) return false;
+      if (typeFilter && project.projectType !== typeFilter) return false;
+      if (leaderFilter && project.leaderName !== leaderFilter) return false;
+      return true;
+    });
+  }, [projects, search, statusFilter, typeFilter, leaderFilter]);
 
   function openProject(projectId: string) {
     selectProject(projectId);
@@ -47,7 +89,7 @@ export function ProjectsPage() {
 
   return (
     <div className="ph-screen">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
         <Segmented
           value={view}
           onChange={setView}
@@ -57,6 +99,26 @@ export function ProjectsPage() {
             { value: 'table', label: 'Table', icon: <Rows size={14} /> },
           ]}
         />
+
+        <FilterSelect
+          value={statusFilter}
+          onChange={(value) => setStatusFilter(value as ProjectStatus | '')}
+          options={toOptions(PROJECT_STATUSES, (key) => PROJECT_STATUS[key].label)}
+          allLabel="All statuses"
+        />
+        <FilterSelect
+          value={typeFilter}
+          onChange={(value) => setTypeFilter(value as ProjectType | '')}
+          options={toOptions(PROJECT_TYPES, (key) => PROJECT_TYPE[key].label)}
+          allLabel="All types"
+        />
+        <FilterSelect
+          value={leaderFilter}
+          onChange={setLeaderFilter}
+          options={leaderOptions.map((name) => ({ value: name, label: name }))}
+          allLabel="All leaders"
+        />
+
         <span style={{ fontSize: 13, color: 'var(--color-neutral-400)' }}>{filtered.length} projects</span>
         <Button variant="primary" onClick={() => setModalOpen(true)} style={{ marginLeft: 'auto' }}>
           <Plus size={14} weight="bold" />
@@ -68,7 +130,11 @@ export function ProjectsPage() {
         <EmptyState
           icon={<Folders size={28} />}
           title="No projects found"
-          description={search ? 'Try a different search.' : 'Create your first project to get started.'}
+          description={
+            search || statusFilter || typeFilter || leaderFilter
+              ? 'Try different filters.'
+              : 'Create your first project to get started.'
+          }
         />
       ) : view === 'grid' ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
