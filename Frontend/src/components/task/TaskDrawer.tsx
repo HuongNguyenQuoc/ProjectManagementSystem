@@ -10,6 +10,7 @@ import { BOARD_COLUMNS, TASK_PRIORITY, TASK_STATUS } from '@/lib/constants';
 import { useComments, useCreateComment } from '@/hooks/useComments';
 import { useUpdateTask } from '@/hooks/useTasks';
 import { useToast } from '@/hooks/useToast';
+import { useAuth } from '@/hooks/useAuth';
 import { errorMessage } from '@/lib/api';
 import type { TaskListItem, TaskStatus } from '@/types/api';
 
@@ -26,6 +27,7 @@ const DRAWER_STATUS_OPTIONS: TaskStatus[] = [...BOARD_COLUMNS, 'CANCELLED'];
 
 export function TaskDrawer({ task, projectId, projectName, isLeader, isAssignee, onClose }: TaskDrawerProps) {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const updateTask = useUpdateTask(projectId);
   const { data: comments, isLoading: commentsLoading } = useComments(projectId, task.id);
   const createComment = useCreateComment(projectId, task.id);
@@ -272,24 +274,57 @@ export function TaskDrawer({ task, projectId, projectName, isLeader, isAssignee,
               <LoadingState label="Loading comments…" />
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 16 }}>
-                {comments?.map((comment) => (
-                  <div key={comment.id} style={{ display: 'flex', gap: 10 }}>
-                    <Avatar name={comment.authorName} colorKey={comment.authorId} size={30} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                        <span style={{ fontSize: 13, fontFamily: 'var(--font-heading)' }}>
-                          {comment.authorName}
-                        </span>
-                        <span style={{ fontSize: 11, color: 'var(--color-neutral-500)' }}>
-                          {relativeTime(comment.createdAt)}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: 13, color: 'var(--color-neutral-300)', lineHeight: 1.5, marginTop: 2 }}>
-                        {comment.content}
+                {comments?.map((comment) => {
+                  const isOwn = comment.authorId === user?.id;
+                  return (
+                    <div
+                      key={comment.id}
+                      style={{ display: 'flex', gap: 10, flexDirection: isOwn ? 'row-reverse' : 'row' }}
+                    >
+                      <Avatar name={comment.authorName} colorKey={comment.authorId} size={30} />
+                      <div
+                        style={{
+                          flex: 1,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: isOwn ? 'flex-end' : 'flex-start',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'baseline',
+                            gap: 8,
+                            flexDirection: isOwn ? 'row-reverse' : 'row',
+                          }}
+                        >
+                          <span style={{ fontSize: 13, fontFamily: 'var(--font-heading)' }}>
+                            {isOwn ? 'You' : comment.authorName}
+                          </span>
+                          <span style={{ fontSize: 11, color: 'var(--color-neutral-500)' }}>
+                            {relativeTime(comment.createdAt)}
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            lineHeight: 1.5,
+                            marginTop: 4,
+                            padding: '8px 12px',
+                            borderRadius: 12,
+                            maxWidth: '100%',
+                            color: isOwn ? 'var(--color-neutral-900)' : 'var(--color-neutral-300)',
+                            background: isOwn
+                              ? 'var(--color-accent-300)'
+                              : 'color-mix(in srgb, var(--color-neutral-300) 10%, transparent)',
+                          }}
+                        >
+                          {comment.content}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
