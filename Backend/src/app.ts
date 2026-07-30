@@ -10,6 +10,7 @@ import userRouter from "./routes/user.routes.js";
 const app: Application = express();
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Apple's OAuth callback posts a form-encoded body
 app.use(cookieParser());
 
 app.get("/", (req: Request, res: Response) => {

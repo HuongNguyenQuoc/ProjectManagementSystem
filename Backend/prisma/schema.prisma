@@ -99,11 +99,19 @@ enum IssueSeverity {
   @@map("issue_severity")
 }
 
+enum OAuthProvider {
+  GOOGLE
+  FACEBOOK
+  APPLE
+
+  @@map("oauth_provider")
+}
+
 model User {
   id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   fullName String @map("full_name") @db.VarChar(100)
   email String @unique @db.VarChar(255)
-  password String @db.VarChar(255)
+  password String? @db.VarChar(255)
   status UserStatus @default(ACTIVE)
   role GlobalRole @default(USER)
 
@@ -118,8 +126,24 @@ model User {
   comments Comment[]
   reportedIssues Issue[] @relation("IssueReportedBy")
   assignedIssues Issue[] @relation("IssueAssignedTo")
+  oauthAccounts OAuthAccount[]
 
   @@map("users")
+}
+
+model OAuthAccount {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  provider OAuthProvider
+  providerAccountId String @map("provider_account_id") @db.VarChar(255)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId], map: "unique_oauth_provider_account")
+  @@index([userId], map: "idx_oauth_accounts_user_id")
+  @@map("oauth_accounts")
 }
 
 model Project {

@@ -1,5 +1,8 @@
 import { prisma } from "../lib/prisma.js";
+import type { Prisma } from "../generated/prisma/client.js";
 import type { GlobalRole, UserStatus } from "../generated/prisma/enums.js";
+
+type DbClient = typeof prisma | Prisma.TransactionClient;
 
 export const findUserByEmail = (email: string) => {
   return prisma.user.findUnique({
@@ -13,6 +16,14 @@ export const createUser = (data: {
   password: string;
 }) => {
   return prisma.user.create({ data });
+};
+
+/** OAuth-only accounts have no password. Accepts a transaction client so it can be paired with `createOAuthAccount` atomically. */
+export const createOAuthUser = (
+  data: { fullName: string; email: string },
+  client: DbClient = prisma,
+) => {
+  return client.user.create({ data: { ...data, password: null } });
 };
 
 export const findUserById = (id: string) => {

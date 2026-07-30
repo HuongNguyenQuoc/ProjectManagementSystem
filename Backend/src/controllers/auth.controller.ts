@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { COOKIE_NAME } from "../../config/env.js";
-import { loginUser, registerUser } from "../services/auth.service.js";
+import { getCurrentUser, loginUser, registerUser } from "../services/auth.service.js";
+import type { AuthRequest } from "../middlewares/requireAuth.js";
 
 export const registerController = async (req: Request, res: Response) => {
   const user = await registerUser(req.body);
@@ -33,5 +34,14 @@ export const logoutController = (_req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     message: "User logged out successfully",
+  });
+};
+
+export const meController = async (req: AuthRequest, res: Response) => {
+  const user = await getCurrentUser(req.userId as string);
+  res.status(200).json({
+    success: true,
+    message: "Current user",
+    data: user,
   });
 };

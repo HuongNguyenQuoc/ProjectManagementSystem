@@ -56,8 +56,10 @@
   --color-danger: oklch(0.66 0.13 25);
 
   /* ── Type ───────────────────────────────────────────────────────────── */
-  --font-heading: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-heading:
+    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-body:
+    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-size-h1: 42px;
   --font-size-h2: 32px;
   --font-size-h3: 25px;
@@ -373,7 +375,8 @@ select.input {
   appearance: none;
   cursor: pointer;
   padding-right: 30px;
-  background-image: linear-gradient(45deg, transparent 50%, var(--color-neutral-400) 50%),
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--color-neutral-400) 50%),
     linear-gradient(135deg, var(--color-neutral-400) 50%, transparent 50%);
   background-position:
     calc(100% - 16px) calc(50% + 1px),
@@ -413,12 +416,12 @@ select.input option {
   color: var(--color-danger);
 }
 
-input[type='date'].input::-webkit-calendar-picker-indicator {
+input[type="date"].input::-webkit-calendar-picker-indicator {
   filter: invert(0.75);
   cursor: pointer;
 }
 
-input[type='range'] {
+input[type="range"] {
   accent-color: var(--color-accent);
 }
 
@@ -492,7 +495,8 @@ input[type='range'] {
 
 .table td {
   padding: 12px;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-divider) 55%, transparent);
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--color-divider) 55%, transparent);
   vertical-align: middle;
 }
 
