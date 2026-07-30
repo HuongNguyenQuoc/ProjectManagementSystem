@@ -1,23 +1,35 @@
 import { useState } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Kanban } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/Field';
 import { useAuth } from '@/hooks/useAuth';
 import { errorMessage } from '@/lib/api';
+import { oauthUrl } from '@/api/auth';
+import { AppleIcon, FacebookIcon, GoogleIcon } from '@/components/icons/ProviderIcons';
 
 const FEATURES = ['Kanban boards with drag-and-drop', 'Role-based access per project', 'Issue tracking & live progress'];
+
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+  oauth_failed: 'Sign-in with that provider failed. Please try again.',
+  oauth_not_configured: 'That sign-in method is not available right now.',
+  oauth_unsupported_provider: 'That sign-in method is not available right now.',
+};
 
 export function LoginPage() {
   const { user, ready, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => {
+    const code = searchParams.get('error');
+    return code ? (OAUTH_ERROR_MESSAGES[code] ?? 'Sign-in failed. Please try again.') : null;
+  });
   const [submitting, setSubmitting] = useState(false);
 
   if (ready && user) {
@@ -189,6 +201,45 @@ export function LoginPage() {
             {isRegister ? 'Create account' : 'Sign in'}
             <ArrowRight size={15} weight="bold" />
           </Button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '20px 0' }}>
+            <span style={{ flex: 1, height: 1, background: 'var(--color-divider)' }} />
+            <span style={{ fontSize: 12, color: 'var(--color-neutral-500)' }}>or continue with</span>
+            <span style={{ flex: 1, height: 1, background: 'var(--color-divider)' }} />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Button
+              type="button"
+              variant="secondary"
+              block
+              onClick={() => {
+                window.location.href = oauthUrl('google');
+              }}
+            >
+              <GoogleIcon /> Continue with Google
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              block
+              onClick={() => {
+                window.location.href = oauthUrl('facebook');
+              }}
+            >
+              <FacebookIcon /> Continue with Facebook
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              block
+              onClick={() => {
+                window.location.href = oauthUrl('apple');
+              }}
+            >
+              <AppleIcon /> Continue with Apple
+            </Button>
+          </div>
 
           <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--color-neutral-400)', marginTop: 20 }}>
             {isRegister ? 'Already have an account?' : 'New to ProjectHub?'}{' '}

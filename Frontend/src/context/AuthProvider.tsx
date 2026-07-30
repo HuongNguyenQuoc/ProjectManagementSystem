@@ -67,6 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  const completeOAuthSignIn = useCallback(async () => {
+    const nextUser = await authApi.me();
+    persist(nextUser);
+    return nextUser;
+  }, [persist]);
+
   const signOut = useCallback(async () => {
     try {
       await authApi.logout();
@@ -76,8 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearSession]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, ready, signIn, signUp, signOut }),
-    [user, ready, signIn, signUp, signOut],
+    () => ({ user, ready, signIn, signUp, signOut, completeOAuthSignIn }),
+    [user, ready, signIn, signUp, signOut, completeOAuthSignIn],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

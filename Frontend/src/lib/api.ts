@@ -7,11 +7,14 @@ import type { ApiEnvelope } from '@/types/api';
  * server (see vite.config.ts) which keeps the cookie same-origin — that is
  * required because the backend sets `sameSite: 'strict'`.
  */
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
+
 export const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
+  baseURL: API_BASE_URL,
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
+
 
 /** A failed request, normalised to the backend's `{ success, message }` shape. */
 export class ApiError extends Error {
@@ -75,3 +78,4 @@ export function errorMessage(error: unknown, fallback = 'Something went wrong'):
   if (error instanceof Error) return error.message;
   return fallback;
 }
+

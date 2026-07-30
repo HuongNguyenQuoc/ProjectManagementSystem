@@ -13,6 +13,7 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { IndexRedirect } from '@/pages/IndexRedirect';
 import { LoginPage } from '@/pages/LoginPage';
 import { MyTasksPage } from '@/pages/MyTasksPage';
+import { OAuthCallbackPage } from '@/pages/OAuthCallbackPage';
 import { ProjectDetailPage } from '@/pages/ProjectDetailPage';
 import { ProjectsPage } from '@/pages/ProjectsPage';
 
@@ -24,6 +25,7 @@ function App() {
           <ToastProvider>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/auth/callback" element={<OAuthCallbackPage />} />
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppShell />}>
                   <Route index element={<IndexRedirect />} />

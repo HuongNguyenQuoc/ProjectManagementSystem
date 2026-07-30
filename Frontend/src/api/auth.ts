@@ -1,5 +1,15 @@
-import { api } from '@/lib/api';
+import { api, API_BASE_URL } from '@/lib/api';
 import type { AuthUser, LoginInput, RegisterInput } from '@/types/api';
+
+export type OAuthProvider = 'google' | 'facebook' | 'apple';
+
+export function oauthUrl(provider: OAuthProvider): string {
+  return `${API_BASE_URL}/auth/${provider}`;
+}
+
+export function me() {
+  return api.get<AuthUser>('/auth/me');
+}
 
 /** `POST /api/auth/register` → 201, returns the user without its password. */
 export function register(input: RegisterInput) {
