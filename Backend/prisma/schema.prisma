@@ -12,6 +12,7 @@ enum UserStatus {
   ACTIVE
   INACTIVE
   BLOCKED
+  PENDING_VERIFICATION
 
   @@map("user_status")
 }
@@ -114,6 +115,8 @@ model User {
   password String? @db.VarChar(255)
   status UserStatus @default(ACTIVE)
   role GlobalRole @default(USER)
+  verificationCode String? @map("verification_code") @db.VarChar(255)
+  verificationCodeExpiresAt DateTime? @map("verification_code_expires_at") @db.Timestamptz(6)
 
   createdAt DateTime @default(now()) @map("createdAt") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @map("updatedAt") @db.Timestamptz(6)
