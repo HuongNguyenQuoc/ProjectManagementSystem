@@ -17,4 +17,3 @@ export interface ToastContextValue {
 export const ToastContext = createContext<ToastContextValue | null>(null);
 
 export const TOAST_DURATION_MS = 2600;
- 
