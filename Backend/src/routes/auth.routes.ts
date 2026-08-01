@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loginController, logoutController, meController, registerController } from "../controllers/auth.controller.js";
+import { loginController, logoutController, meController, registerController, verifyEmailController, resendVerificationController } from "../controllers/auth.controller.js";
 import { oauthCallbackController, oauthRedirectController } from "../controllers/oauth.controller.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
 
@@ -7,6 +7,8 @@ const authRouter = Router();
 
 authRouter.post("/register", registerController);
 authRouter.post("/login", loginController);
+authRouter.post("/verify-email", verifyEmailController);
+authRouter.post("/resend-verification", resendVerificationController);
 authRouter.post("/logout", logoutController);
 // Must be registered before "/:provider" below, or Express matches provider = "me" first.
 authRouter.get("/me", requireAuth, meController);

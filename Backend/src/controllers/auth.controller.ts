@@ -1,7 +1,13 @@
 import type { Request, Response } from "express";
 import { COOKIE_NAME } from "../../config/env.js";
-import { getCurrentUser, loginUser, registerUser } from "../services/auth.service.js";
 import type { AuthRequest } from "../middlewares/requireAuth.js";
+import {
+  getCurrentUser,
+  loginUser,
+  registerUser,
+  resendVerificationCode,
+  verifyEmail,
+} from "../services/auth.service.js";
 
 export const registerController = async (req: Request, res: Response) => {
   const user = await registerUser(req.body);
@@ -43,5 +49,33 @@ export const meController = async (req: AuthRequest, res: Response) => {
     success: true,
     message: "Current user",
     data: user,
+  });
+};
+
+export const verifyEmailController = async (req: Request, res: Response) => {
+  const { user, token } = await verifyEmail(req.body);
+
+  res.cookie(COOKIE_NAME as string, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", //
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Email verified successfully",
+    data: { user },
+  });
+};
+
+export const resendVerificationController = async (
+  req: Request,
+  res: Response,
+) => {
+  await resendVerificationCode(req.body);
+  res.status(200).json({
+    success: true,
+    message: "Verification code resent",
   });
 };

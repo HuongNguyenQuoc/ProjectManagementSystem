@@ -1,16 +1,23 @@
-import { createPublicKey, randomBytes, type JsonWebKey } from "node:crypto";
 import jwt from "jsonwebtoken";
+import { createPublicKey, randomBytes, type JsonWebKey } from "node:crypto";
+import { EXPIRES_IN, JWT_SECRET } from "../../config/env.js";
 import { AppError } from "../errors/appError.js";
-import { JWT_SECRET, EXPIRES_IN } from "../../config/env.js";
-import { prisma } from "../lib/prisma.js";
-import { createOAuthUser, findUserByEmail } from "../repositories/user.repository.js";
-import { createOAuthAccount, findOAuthAccount } from "../repositories/oauthAccount.repository.js";
+import type { User } from "../generated/prisma/client.js";
 import { OAuthProvider as OAuthProviderEnum } from "../generated/prisma/enums.js";
 import {
   getAppleSigningConfig,
   getProviderEndpoints,
   type OAuthProviderName,
 } from "../lib/oauthProviders.js";
+import { prisma } from "../lib/prisma.js";
+import {
+  createOAuthAccount,
+  findOAuthAccount,
+} from "../repositories/oauthAccount.repository.js";
+import {
+  createOAuthUser,
+  findUserByEmail,
+} from "../repositories/user.repository.js";
 
 const PROVIDER_ENUM: Record<OAuthProviderName, OAuthProviderEnum> = {
   google: OAuthProviderEnum.GOOGLE,
@@ -30,9 +37,13 @@ export interface NormalizedOAuthProfile {
  * works identically whether the provider echoes it back via query string
  * (Google/Facebook) or form body (Apple). */
 export const buildOAuthState = (): string => {
-  return jwt.sign({ nonce: randomBytes(8).toString("hex") }, JWT_SECRET as string, {
-    expiresIn: "10m",
-  });
+  return jwt.sign(
+    { nonce: randomBytes(8).toString("hex") },
+    JWT_SECRET as string,
+    {
+      expiresIn: "10m",
+    },
+  );
 };
 
 export const verifyOAuthState = (state: string | undefined): boolean => {
@@ -45,8 +56,12 @@ export const verifyOAuthState = (state: string | undefined): boolean => {
   }
 };
 
-export const buildAuthorizationUrl = (provider: OAuthProviderName, state: string): string => {
-  const { authorizeUrl, scope, clientId, callbackUrl } = getProviderEndpoints(provider);
+export const buildAuthorizationUrl = (
+  provider: OAuthProviderName,
+  state: string,
+): string => {
+  const { authorizeUrl, scope, clientId, callbackUrl } =
+    getProviderEndpoints(provider);
   if (!clientId || !callbackUrl) {
     throw new AppError(500, `${provider} sign-in is not configured`);
   }
@@ -86,13 +101,16 @@ const verifyAppleIdToken = async (
   clientId: string,
 ): Promise<{ sub: string; email?: string }> => {
   const decoded = jwt.decode(idToken, { complete: true });
-  const kid = decoded && typeof decoded === "object" ? decoded.header.kid : undefined;
+  const kid =
+    decoded && typeof decoded === "object" ? decoded.header.kid : undefined;
   if (!kid) {
     throw new AppError(400, "Invalid Apple identity token");
   }
 
   const jwksRes = await fetch("https://appleid.apple.com/auth/keys");
-  const jwks = (await jwksRes.json()) as { keys: Array<JsonWebKey & { kid: string }> };
+  const jwks = (await jwksRes.json()) as {
+    keys: Array<JsonWebKey & { kid: string }>;
+  };
   const jwk = jwks.keys.find((key) => key.kid === kid);
   if (!jwk) {
     throw new AppError(400, "Unable to verify Apple identity token");
@@ -109,7 +127,10 @@ const verifyAppleIdToken = async (
       issuer: "https://appleid.apple.com",
       audience: clientId,
     }) as jwt.JwtPayload;
-    return { sub: payload.sub as string, email: payload.email as string | undefined };
+    return {
+      sub: payload.sub as string,
+      email: payload.email as string | undefined,
+    };
   } catch {
     throw new AppError(400, "Apple identity token verification failed");
   }
@@ -122,7 +143,8 @@ export const fetchOAuthProfile = async (
   code: string,
   appleUserPayload?: string,
 ): Promise<NormalizedOAuthProfile> => {
-  const { tokenUrl, clientId, clientSecret, callbackUrl } = getProviderEndpoints(provider);
+  const { tokenUrl, clientId, clientSecret, callbackUrl } =
+    getProviderEndpoints(provider);
   if (!clientId || !callbackUrl) {
     throw new AppError(500, `${provider} sign-in is not configured`);
   }
@@ -144,10 +166,17 @@ export const fetchOAuthProfile = async (
       throw new AppError(400, "Failed to exchange Google authorization code");
     }
 
-    const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-      headers: { Authorization: `Bearer ${tokenData.access_token}` },
-    });
-    const profile = (await userRes.json()) as { sub?: string; email?: string; name?: string };
+    const userRes = await fetch(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: { Authorization: `Bearer ${tokenData.access_token}` },
+      },
+    );
+    const profile = (await userRes.json()) as {
+      sub?: string;
+      email?: string;
+      name?: string;
+    };
     if (!userRes.ok || !profile.sub || !profile.email) {
       throw new AppError(400, "No email available from Google account");
     }
@@ -176,8 +205,14 @@ export const fetchOAuthProfile = async (
       fields: "id,name,email",
       access_token: tokenData.access_token,
     });
-    const profileRes = await fetch(`https://graph.facebook.com/v19.0/me?${profileParams.toString()}`);
-    const profile = (await profileRes.json()) as { id?: string; email?: string; name?: string };
+    const profileRes = await fetch(
+      `https://graph.facebook.com/v19.0/me?${profileParams.toString()}`,
+    );
+    const profile = (await profileRes.json()) as {
+      id?: string;
+      email?: string;
+      name?: string;
+    };
     if (!profileRes.ok || !profile.id || !profile.email) {
       throw new AppError(400, "No email available from Facebook account");
     }
@@ -214,8 +249,12 @@ export const fetchOAuthProfile = async (
   let fullName = email.split("@")[0];
   if (appleUserPayload) {
     try {
-      const parsed = JSON.parse(appleUserPayload) as { name?: { firstName?: string; lastName?: string } };
-      const joined = [parsed.name?.firstName, parsed.name?.lastName].filter(Boolean).join(" ");
+      const parsed = JSON.parse(appleUserPayload) as {
+        name?: { firstName?: string; lastName?: string };
+      };
+      const joined = [parsed.name?.firstName, parsed.name?.lastName]
+        .filter(Boolean)
+        .join(" ");
       if (joined) fullName = joined;
     } catch {
       // malformed/absent `user` field on this callback — keep the email-derived fallback
@@ -225,11 +264,12 @@ export const fetchOAuthProfile = async (
   return { providerAccountId: sub, email, fullName };
 };
 
-const issueSession = (user) => {
+const issueSession = (user: User) => {
   const token = jwt.sign({ userId: user.id }, JWT_SECRET as string, {
     expiresIn: EXPIRES_IN as jwt.SignOptions["expiresIn"],
   });
-  const { password, verificationCode, verificationCodeExpiresAt, ...safeUser } = user;
+  const { password, verificationCode, verificationCodeExpiresAt, ...safeUser } =
+    user;
   return { user: safeUser, token };
 };
 
@@ -239,7 +279,10 @@ export const loginOrRegisterWithOAuth = async (
 ) => {
   const providerEnum = PROVIDER_ENUM[provider];
 
-  const existingAccount = await findOAuthAccount(providerEnum, profile.providerAccountId);
+  const existingAccount = await findOAuthAccount(
+    providerEnum,
+    profile.providerAccountId,
+  );
   if (existingAccount) {
     if (existingAccount.user.status !== "ACTIVE") {
       throw new AppError(403, "User account is not active");
@@ -261,9 +304,16 @@ export const loginOrRegisterWithOAuth = async (
   }
 
   const newUser = await prisma.$transaction(async (tx) => {
-    const user = await createOAuthUser({ fullName: profile.fullName, email: profile.email }, tx);
+    const user = await createOAuthUser(
+      { fullName: profile.fullName, email: profile.email },
+      tx,
+    );
     await createOAuthAccount(
-      { userId: user.id, provider: providerEnum, providerAccountId: profile.providerAccountId },
+      {
+        userId: user.id,
+        provider: providerEnum,
+        providerAccountId: profile.providerAccountId,
+      },
       tx,
     );
     return user;
