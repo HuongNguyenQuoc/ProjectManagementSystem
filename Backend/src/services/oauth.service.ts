@@ -225,11 +225,11 @@ export const fetchOAuthProfile = async (
   return { providerAccountId: sub, email, fullName };
 };
 
-const issueSession = (user: { id: string; password: string | null }) => {
+const issueSession = (user) => {
   const token = jwt.sign({ userId: user.id }, JWT_SECRET as string, {
     expiresIn: EXPIRES_IN as jwt.SignOptions["expiresIn"],
   });
-  const { password, ...safeUser } = user;
+  const { password, verificationCode, verificationCodeExpiresAt, ...safeUser } = user;
   return { user: safeUser, token };
 };
 

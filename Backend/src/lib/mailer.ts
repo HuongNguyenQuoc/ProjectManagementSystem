@@ -5,6 +5,7 @@ import {
   SMTP_PASSWORD,
   SMTP_PORT,
   SMTP_USER,
+  SMTP_FROM,
 } from "../../config/env.js";
 import { VERIFICATION_CODE_TTL_MINUTES } from "./otp.js";
 
@@ -42,7 +43,7 @@ const getTransporter = async (): Promise<Transporter> => {
 export const sendVerificationEmail = async (to: string, code: string) => {
   const transporter = await getTransporter();
   const info = await transporter.sendMail({
-    from: SMTP_USER || "no-reply@projecthub.local",
+    from: SMTP_FROM || "no-reply@projecthub.local",
     to,
     subject: "Your ProjectHub verification code",
     text: `Your verification code is: ${code}. It expires in ${VERIFICATION_CODE_TTL_MINUTES} minutes.`,

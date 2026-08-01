@@ -14,6 +14,7 @@ export const createUser = (data: {
   fullName: string;
   email: string;
   password: string;
+  status: UserStatus;
 }) => {
   return prisma.user.create({ data });
 };
@@ -54,4 +55,21 @@ export const updateUserStatus = (userId: string, status: UserStatus) => {
 
 export const updateUserRole = (userId: string, role: GlobalRole) => {
   return prisma.user.update({ where: { id: userId }, data: { role } });
+};
+
+export const setVerificationCode = (
+  userId: string, 
+  data: { code: string; expiresAt: Date },
+) => {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { verificationCode: data.code, verificationCodeExpiresAt: data.expiresAt },
+  });
+};
+
+export const activeUser = (userId: string) => {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { status: "ACTIVE", verificationCode: null, verificationCodeExpiresAt: null },
+  });
 };
