@@ -96,7 +96,6 @@ export const verifyEmail = async ({ email, code }: VerifyEmailInput) => {
   const isCodeValid = await compareVerificationCode(code, user.verificationCode);
   if (!isCodeValid) { throw new AppError(400, 'Invalid verification code'); }
 
-  await updateUserStatus(user.id, 'ACTIVE');
   await activeUser(user.id);
 
   const token = jwt.sign(
