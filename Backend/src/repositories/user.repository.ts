@@ -73,3 +73,20 @@ export const activeUser = (userId: string) => {
     data: { status: "ACTIVE", verificationCode: null, verificationCodeExpiresAt: null },
   });
 };
+
+export const setPasswordResetCode = (
+  userId: string,
+  data: { code: string; expiresAt: Date },
+) => {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { passwordResetCode: data.code, passwordResetCodeExpiresAt: data.expiresAt },
+  });
+};
+
+export const resetPasswordAndClearResetCode = (userId: string, newPassword: string) => {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { password: newPassword, passwordResetCode: null, passwordResetCodeExpiresAt: null },
+  });
+};

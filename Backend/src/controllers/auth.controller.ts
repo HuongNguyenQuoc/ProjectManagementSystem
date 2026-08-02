@@ -5,7 +5,9 @@ import {
   getCurrentUser,
   loginUser,
   registerUser,
+  requestPasswordReset,
   resendVerificationCode,
+  resetPassword,
   verifyEmail,
 } from "../services/auth.service.js";
 
@@ -77,5 +79,33 @@ export const resendVerificationController = async (
   res.status(200).json({
     success: true,
     message: "Verification code resent",
+  });
+};
+
+export const requestPasswordResetController = async (
+  req: Request,
+  res: Response,
+) => {
+  await requestPasswordReset(req.body);
+  res.status(200).json({
+    success: true,
+    message: "Password reset code sent",
+  });
+};
+
+export const resetPasswordController = async (req: Request, res: Response) => {
+  const { user, token } = await resetPassword(req.body);
+
+  res.cookie(COOKIE_NAME as string, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Password reset successfully",
+    data: { user },
   });
 };

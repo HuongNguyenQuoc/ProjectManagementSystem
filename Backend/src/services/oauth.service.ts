@@ -268,8 +268,7 @@ const issueSession = (user: User) => {
   const token = jwt.sign({ userId: user.id }, JWT_SECRET as string, {
     expiresIn: EXPIRES_IN as jwt.SignOptions["expiresIn"],
   });
-  const { password, verificationCode, verificationCodeExpiresAt, ...safeUser } =
-    user;
+  const { password, verificationCode, verificationCodeExpiresAt, passwordResetCode, passwordResetCodeExpiresAt, ...safeUser } = user;
   return { user: safeUser, token };
 };
 

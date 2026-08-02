@@ -54,3 +54,18 @@ export const sendVerificationEmail = async (to: string, code: string) => {
     console.log(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
   }
 };
+
+export const sendPasswordResetEmail = async (to: string, code: string) => {
+  const transporter = await getTransporter();
+  const info = await transporter.sendMail({
+    from: SMTP_FROM || "no-reply@projecthub.local",
+    to,
+    subject: "Your ProjectHub password reset code",
+    text: `Your password reset code is: ${code}. It expires in ${ VERIFICATION_CODE_TTL_MINUTES } minutes. If you didn't request this, please ignore this email.`,
+    html: `<p>Your password reset code is: <strong>${code}</strong>. It expires in ${ VERIFICATION_CODE_TTL_MINUTES } minutes.</p><p>If you didn't request this, please ignore this email.</p>`,
+  });
+
+  if (!SMTP_HOST) {
+    console.log(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
+  }
+};

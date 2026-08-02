@@ -1,10 +1,23 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { AppError } from '../errors/appError.js';
-import { JWT_SECRET, EXPIRES_IN } from '../../config/env.js';
-import { activeUser, createUser, findUserByEmail, findUserById, setVerificationCode, updateUserStatus } from '../repositories/user.repository.js';
-import { compareVerificationCode, generateVerificationCode, hashVerificationCode, VERIFICATION_CODE_TTL_MINUTES } from '../lib/otp.js';
-import { sendVerificationEmail } from '../lib/mailer.js';
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { EXPIRES_IN, JWT_SECRET } from "../../config/env.js";
+import { AppError } from "../errors/appError.js";
+import { sendVerificationEmail, sendPasswordResetEmail } from "../lib/mailer.js";
+import {
+  compareVerificationCode,
+  generateVerificationCode,
+  hashVerificationCode,
+  VERIFICATION_CODE_TTL_MINUTES,
+} from "../lib/otp.js";
+import {
+  activeUser,
+  createUser,
+  findUserByEmail,
+  findUserById,
+  setVerificationCode,
+  setPasswordResetCode,
+  resetPasswordAndClearResetCode
+} from "../repositories/user.repository.js";
 
 interface RegisterInput {
   fullName: string;
@@ -17,65 +30,72 @@ interface LoginInput {
   password: string;
 }
 
-export const registerUser = async (input: RegisterInput)=> {
+export const registerUser = async (input: RegisterInput) => {
   if (!input.fullName || !input.email || !input.password) {
-    throw new AppError(400, 'Full name, email and password are required');
+    throw new AppError(400, "Full name, email and password are required");
   }
 
   const existingUser = await findUserByEmail(input.email);
   if (existingUser) {
-    throw new AppError(400, 'Email already exists');
+    throw new AppError(400, "Email already exists");
   }
 
   const hashedPassword = await bcrypt.hash(input.password, 10);
   const newUser = await createUser({
-    ...input, password: hashedPassword, status: 'PENDING_VERIFICATION',
+    ...input,
+    password: hashedPassword,
+    status: "PENDING_VERIFICATION",
   });
 
   const code = generateVerificationCode();
   const hashedCode = await hashVerificationCode(code);
-  const expiresAt = new Date(Date.now() + VERIFICATION_CODE_TTL_MINUTES * 60 * 1000) // 15 minutes from now
+  const expiresAt = new Date(
+    Date.now() + VERIFICATION_CODE_TTL_MINUTES * 60 * 1000,
+  ); // 15 minutes from now
   await setVerificationCode(newUser.id, { code: hashedCode, expiresAt });
   await sendVerificationEmail(newUser.email, code);
 
-  const { password, verificationCode, verificationCodeExpiresAt, ...safeUser } = newUser;
+  const { password, verificationCode, verificationCodeExpiresAt, passwordResetCode, passwordResetCodeExpiresAt, ...safeUser } =
+    newUser;
   return safeUser;
-}
+};
 
 export const loginUser = async (input: LoginInput) => {
   if (!input.email || !input.password) {
-    throw new AppError(400, 'Email and password are required');
+    throw new AppError(400, "Email and password are required");
   }
 
   const user = await findUserByEmail(input.email);
   if (!user) {
-    throw new AppError(401, 'Invalid email or password');
+    throw new AppError(401, "Invalid email or password");
   }
 
-  if (user.status !== 'ACTIVE') {
-    if (user.status === 'PENDING_VERIFICATION') {
-      throw new AppError(403, 'Please verify your email before signing in');
+  if (user.status !== "ACTIVE") {
+    if (user.status === "PENDING_VERIFICATION") {
+      throw new AppError(403, "Please verify your email before signing in");
     }
-    throw new AppError(403, 'User account is not active');
+    throw new AppError(403, "User account is not active");
   }
 
   if (!user.password) {
-    throw new AppError(401, 'This account has no password set. Sign in with Google, Facebook, or Apple instead.');
+    throw new AppError(
+      401,
+      "This account has no password set. Sign in with Google, Facebook, or Apple instead.",
+    );
   }
 
   const isPasswordValid = await bcrypt.compare(input.password, user.password);
 
   if (!isPasswordValid) {
-    throw new AppError(401, 'Invalid email or password');
+    throw new AppError(401, "Invalid email or password");
   }
 
-  const token = jwt.sign(
-    { userId: user.id },
-    JWT_SECRET as string,
-    { expiresIn: EXPIRES_IN as jwt.SignOptions['expiresIn'] }
-  );
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET as string, {
+    expiresIn: EXPIRES_IN as jwt.SignOptions["expiresIn"],
+  });
 
-  const { password, verificationCode, verificationCodeExpiresAt, ...safeUser } = user;
+  const { password, verificationCode, verificationCodeExpiresAt, passwordResetCode, passwordResetCodeExpiresAt, ...safeUser } =
+    user;
   return { user: safeUser, token };
 };
 
@@ -87,52 +107,79 @@ interface VerifyEmailInput {
 
 export const verifyEmail = async ({ email, code }: VerifyEmailInput) => {
   const user = await findUserByEmail(email);
-  if (!user) { throw new AppError(404, 'User not found'); }
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
 
-  if (user.status !== 'PENDING_VERIFICATION') { throw new AppError(400, 'User is already verified or not in a verifiable state'); }
+  if (user.status !== "PENDING_VERIFICATION") {
+    throw new AppError(
+      400,
+      "User is already verified or not in a verifiable state",
+    );
+  }
 
-  if (!user.verificationCode || !user.verificationCodeExpiresAt || user.verificationCodeExpiresAt < new Date()) { throw new AppError(400, 'Verification code has expired, please request a new one'); }
+  if (
+    !user.verificationCode ||
+    !user.verificationCodeExpiresAt ||
+    user.verificationCodeExpiresAt < new Date()
+  ) {
+    throw new AppError(
+      400,
+      "Verification code has expired, please request a new one",
+    );
+  }
 
-  const isCodeValid = await compareVerificationCode(code, user.verificationCode);
-  if (!isCodeValid) { throw new AppError(400, 'Invalid verification code'); }
+  const isCodeValid = await compareVerificationCode(
+    code,
+    user.verificationCode,
+  );
+  if (!isCodeValid) {
+    throw new AppError(400, "Invalid verification code");
+  }
 
   await activeUser(user.id);
 
-  const token = jwt.sign(
-    { userId: user.id },
-    JWT_SECRET as string,
-    { expiresIn: EXPIRES_IN as jwt.SignOptions['expiresIn'] }
-  );
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET as string, {
+    expiresIn: EXPIRES_IN as jwt.SignOptions["expiresIn"],
+  });
 
-  const { password, verificationCode, verificationCodeExpiresAt, ...safeUser } = user;
-  return { user: { ...safeUser, status: 'ACTIVE' as const }, token };
-}
+  const { password, verificationCode, verificationCodeExpiresAt, passwordResetCode, passwordResetCodeExpiresAt, ...safeUser } =
+    user;
+  return { user: { ...safeUser, status: "ACTIVE" as const }, token };
+};
 
 interface ResendVerificationCodeInput {
   email: string;
 }
 
-export const resendVerificationCode = async ({ email }: ResendVerificationCodeInput) => {
+export const resendVerificationCode = async ({
+  email,
+}: ResendVerificationCodeInput) => {
   const user = await findUserByEmail(email);
-  if (!user) { 
-    throw new AppError(404, 'User not found'); 
+  if (!user) {
+    throw new AppError(404, "User not found");
   }
 
-  if (user.status !== 'PENDING_VERIFICATION') { 
-    throw new AppError(400, 'Email is already verified');
+  if (user.status !== "PENDING_VERIFICATION") {
+    throw new AppError(400, "Email is already verified");
   }
 
   if (user.verificationCodeExpiresAt) {
-    const issuedAt = new Date(user.verificationCodeExpiresAt.getTime() - VERIFICATION_CODE_TTL_MINUTES * 60 * 1000);
+    const issuedAt = new Date(
+      user.verificationCodeExpiresAt.getTime() -
+        VERIFICATION_CODE_TTL_MINUTES * 60 * 1000,
+    );
     const secondsSinceIssued = (Date.now() - issuedAt.getTime()) / 1000;
     if (secondsSinceIssued < 60) {
-      throw new AppError(429, 'Please wait before requesting another code');
+      throw new AppError(429, "Please wait before requesting another code");
     }
   }
 
   const code = generateVerificationCode();
   const hashedCode = await hashVerificationCode(code);
-  const expiresAt = new Date(Date.now() + VERIFICATION_CODE_TTL_MINUTES * 60 * 1000); // 15 minutes fron now
+  const expiresAt = new Date(
+    Date.now() + VERIFICATION_CODE_TTL_MINUTES * 60 * 1000,
+  ); // 15 minutes fron now
 
   await setVerificationCode(user.id, { code: hashedCode, expiresAt });
   await sendVerificationEmail(user.email, code);
@@ -144,9 +191,74 @@ export const resendVerificationCode = async ({ email }: ResendVerificationCodeIn
 export const getCurrentUser = async (userId: string) => {
   const user = await findUserById(userId);
   if (!user) {
-    throw new AppError(401, 'User not found');
+    throw new AppError(401, "User not found");
   }
 
-  const { password, verificationCode, verificationCodeExpiresAt, ...safeUser } = user;
+  const { password, verificationCode, verificationCodeExpiresAt, passwordResetCode, passwordResetCodeExpiresAt, ...safeUser } =
+    user;
   return safeUser;
+};
+
+interface RequestPasswordResetInput {
+  email: string;
+}
+
+export const requestPasswordReset = async ({ email }: RequestPasswordResetInput ) => {
+  const user = await findUserByEmail(email);
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+
+  if (user.passwordResetCodeExpiresAt) {
+    const issuedAt = new Date(user.passwordResetCodeExpiresAt.getTime() - VERIFICATION_CODE_TTL_MINUTES * 60 * 1000);
+    const secondsSinceIssued = (Date.now() - issuedAt.getTime()) / 1000;
+    if (secondsSinceIssued < 60) {
+      throw new AppError(429, "Please wait before requesting another code");
+    }
+  }
+
+  const code = generateVerificationCode();
+  const hashedCode = await hashVerificationCode(code);
+  const expiresAt = new Date(Date.now() + VERIFICATION_CODE_TTL_MINUTES * 60 * 1000); // 15 minutes from now
+
+  await setPasswordResetCode(user.id, { code: hashedCode, expiresAt });
+  await sendPasswordResetEmail(user.email, code);
+}
+
+interface ResetPasswordInput {
+  email: string;
+  code: string;
+  newPassword: string;
+}
+
+export const resetPassword = async ({ email, code, newPassword }: ResetPasswordInput ) => {
+  const user = await findUserByEmail(email);
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+
+  if (!user.passwordResetCode || !user.passwordResetCodeExpiresAt || user.passwordResetCodeExpiresAt < new Date()) {
+    throw new AppError(400, "Password reset code has expired, please request a new one");
+  }
+
+  const isCodeValid = await compareVerificationCode(code, user.passwordResetCode);
+  if (!isCodeValid) {
+    throw new AppError(400, "Invalid password reset code");
+  }
+
+  if (!newPassword) {
+    throw new AppError(400, "New password is required");
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  await resetPasswordAndClearResetCode(user.id, hashedPassword);
+
+  const token = jwt.sign(
+    { userId: user.id },
+    JWT_SECRET as string,
+    { expiresIn: EXPIRES_IN as jwt.SignOptions["expiresIn"] }
+  );
+
+  const { password, verificationCode, verificationCodeExpiresAt, passwordResetCode, passwordResetCodeExpiresAt, ...safeUser } = user;
+  return { user: safeUser, token };
 };
