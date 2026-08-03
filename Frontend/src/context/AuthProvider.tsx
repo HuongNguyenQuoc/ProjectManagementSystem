@@ -58,13 +58,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = useCallback(
     async (input: RegisterInput) => {
-      // Register does not set a cookie, so log the new account straight in.
-      await authApi.register(input);
-      const nextUser = await authApi.login({ email: input.email, password: input.password });
-      persist(nextUser);
-      return nextUser;
+      // Account is created as PENDING_VERIFICATION - no cookie yet, caller navigates to /verify-email.
+      return authApi.register(input);
     },
-    [persist],
+    [],
   );
 
   const completeOAuthSignIn = useCallback(async () => {
@@ -72,6 +69,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persist(nextUser);
     return nextUser;
   }, [persist]);
+
+  const verifyEmail = useCallback(
+    async (input: { email: string; code: string }) => {
+      const nextUser = await authApi.verifyEmail(input);
+      persist(nextUser);
+      return nextUser;
+    },
+    [persist],
+  );
+
+  const resetPassword = useCallback(
+    async (input: { email: string; code: string; newPassword: string }) => {
+      const nextUser = await authApi.resetPassword(input);
+      persist(nextUser);
+      return nextUser;
+    },
+    [persist],
+  );
 
   const signOut = useCallback(async () => {
     try {
@@ -82,8 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearSession]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, ready, signIn, signUp, signOut, completeOAuthSignIn }),
-    [user, ready, signIn, signUp, signOut, completeOAuthSignIn],
+    () => ({ user, ready, signIn, signUp, signOut, completeOAuthSignIn, verifyEmail, resetPassword }),
+    [user, ready, signIn, signUp, signOut, completeOAuthSignIn, verifyEmail, resetPassword],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

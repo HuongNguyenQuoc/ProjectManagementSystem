@@ -1,19 +1,32 @@
-import { useState } from 'react';
-import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight, Kanban } from '@phosphor-icons/react';
-import { Button } from '@/components/ui/Button';
-import { TextField } from '@/components/ui/Field';
-import { useAuth } from '@/hooks/useAuth';
-import { errorMessage } from '@/lib/api';
-import { oauthUrl } from '@/api/auth';
-import { AppleIcon, FacebookIcon, GoogleIcon } from '@/components/icons/ProviderIcons';
+import { oauthUrl } from "@/api/auth";
+import {
+  AppleIcon,
+  FacebookIcon,
+  GoogleIcon,
+} from "@/components/icons/ProviderIcons";
+import { Button } from "@/components/ui/Button";
+import { TextField } from "@/components/ui/Field";
+import { useAuth } from "@/hooks/useAuth";
+import { errorMessage } from "@/lib/api";
+import { ArrowRight, Kanban } from "@phosphor-icons/react";
+import { useState } from "react";
+import {
+  Navigate,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 
-const FEATURES = ['Kanban boards with drag-and-drop', 'Role-based access per project', 'Issue tracking & live progress'];
+const FEATURES = [
+  "Kanban boards with drag-and-drop",
+  "Role-based access per project",
+  "Issue tracking & live progress",
+];
 
 const OAUTH_ERROR_MESSAGES: Record<string, string> = {
-  oauth_failed: 'Sign-in with that provider failed. Please try again.',
-  oauth_not_configured: 'That sign-in method is not available right now.',
-  oauth_unsupported_provider: 'That sign-in method is not available right now.',
+  oauth_failed: "Sign-in with that provider failed. Please try again.",
+  oauth_not_configured: "That sign-in method is not available right now.",
+  oauth_unsupported_provider: "That sign-in method is not available right now.",
 };
 
 export function LoginPage() {
@@ -22,36 +35,41 @@ export function LoginPage() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(() => {
-    const code = searchParams.get('error');
-    return code ? (OAUTH_ERROR_MESSAGES[code] ?? 'Sign-in failed. Please try again.') : null;
+    const code = searchParams.get("error");
+    return code
+      ? (OAUTH_ERROR_MESSAGES[code] ?? "Sign-in failed. Please try again.")
+      : null;
   });
   const [submitting, setSubmitting] = useState(false);
 
   if (ready && user) {
     const from = (location.state as { from?: Location } | null)?.from;
-    return <Navigate to={from?.pathname ?? '/'} replace />;
+    return <Navigate to={from?.pathname ?? "/"} replace />;
   }
 
-  const isRegister = mode === 'register';
+  const isRegister = mode === "register";
 
   async function handleSubmit() {
     setError(null);
-    if (isRegister && !fullName.trim()) return setError('Full name is required');
-    if (!email.trim() || !password) return setError('Email and password are required');
+    if (isRegister && !fullName.trim())
+      return setError("Full name is required");
+    if (!email.trim() || !password)
+      return setError("Email and password are required");
 
     setSubmitting(true);
     try {
       if (isRegister) {
         await signUp({ fullName, email, password });
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`);
       } else {
         await signIn({ email, password });
+        navigate("/", { replace: true });
       }
-      navigate('/', { replace: true });
     } catch (submitError) {
       setError(errorMessage(submitError));
     } finally {
@@ -60,33 +78,48 @@ export function LoginPage() {
   }
 
   return (
-    <div className="ph-screen" style={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: '1.05fr .95fr' }}>
+    <div
+      className="ph-screen"
+      style={{
+        minHeight: "100vh",
+        display: "grid",
+        gridTemplateColumns: "1.05fr .95fr",
+      }}
+    >
       <div
         style={{
-          position: 'relative',
-          overflow: 'hidden',
-          padding: '56px 60px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          background: 'linear-gradient(155deg, var(--color-section) 0%, var(--color-bg) 78%)',
+          position: "relative",
+          overflow: "hidden",
+          padding: "56px 60px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          background:
+            "linear-gradient(155deg, var(--color-section) 0%, var(--color-bg) 78%)",
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
           <div
             style={{
               width: 34,
               height: 34,
               borderRadius: 9,
-              background: 'var(--color-accent)',
-              display: 'grid',
-              placeItems: 'center',
-              color: 'var(--color-bg)',
+              background: "var(--color-accent)",
+              display: "grid",
+              placeItems: "center",
+              color: "var(--color-bg)",
             }}
           >
             <Kanban size={19} weight="fill" />
           </div>
-          <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: 19, letterSpacing: '-0.01em' }}>
+          <span
+            style={{
+              fontFamily: "var(--font-heading)",
+              fontWeight: 600,
+              fontSize: 19,
+              letterSpacing: "-0.01em",
+            }}
+          >
             ProjectHub
           </span>
         </div>
@@ -95,71 +128,115 @@ export function LoginPage() {
           <div
             style={{
               fontSize: 12,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'var(--color-accent-300)',
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--color-accent-300)",
               marginBottom: 18,
             }}
           >
             Project Management System
           </div>
-          <h1 style={{ marginBottom: 18 }}>Ship software the whole team can see.</h1>
-          <p style={{ fontSize: 15, lineHeight: 1.6, color: 'var(--color-neutral-300)' }}>
-            Plan projects, assign tasks, track progress and surface blockers — with role-based
-            access for leaders and members.
+          <h1 style={{ marginBottom: 18 }}>
+            Ship software the whole team can see.
+          </h1>
+          <p
+            style={{
+              fontSize: 15,
+              lineHeight: 1.6,
+              color: "var(--color-neutral-300)",
+            }}
+          >
+            Plan projects, assign tasks, track progress and surface blockers —
+            with role-based access for leaders and members.
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 34 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+              marginTop: 34,
+            }}
+          >
             {FEATURES.map((feature) => (
-              <div key={feature} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div
+                key={feature}
+                style={{ display: "flex", alignItems: "center", gap: 10 }}
+              >
                 <span
                   style={{
                     width: 5,
                     height: 5,
-                    borderRadius: '50%',
-                    background: 'var(--color-accent-400)',
-                    flex: 'none',
+                    borderRadius: "50%",
+                    background: "var(--color-accent-400)",
+                    flex: "none",
                   }}
                 />
-                <span style={{ fontSize: 13, color: 'var(--color-neutral-300)' }}>{feature}</span>
+                <span
+                  style={{ fontSize: 13, color: "var(--color-neutral-300)" }}
+                >
+                  {feature}
+                </span>
               </div>
             ))}
           </div>
         </div>
 
-        <div style={{ fontSize: 12, color: 'var(--color-neutral-500)' }}>
+        <div style={{ fontSize: 12, color: "var(--color-neutral-500)" }}>
           Two roles · Project Leader &amp; Member
         </div>
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             right: -140,
             bottom: -160,
             width: 420,
             height: 420,
-            borderRadius: '50%',
+            borderRadius: "50%",
             background:
-              'radial-gradient(circle, color-mix(in srgb, var(--color-accent) 26%, transparent), transparent 62%)',
-            filter: 'blur(6px)',
+              "radial-gradient(circle, color-mix(in srgb, var(--color-accent) 26%, transparent), transparent 62%)",
+            filter: "blur(6px)",
           }}
         />
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 40,
+        }}
+      >
         <form
-          style={{ width: 'min(400px, 100%)' }}
+          style={{ width: "min(400px, 100%)" }}
           onSubmit={(event) => {
             event.preventDefault();
             void handleSubmit();
           }}
         >
           <h2 style={{ fontSize: 27, marginBottom: 6 }}>
-            {isRegister ? 'Create your account' : 'Welcome back'}
+            {isRegister ? "Create your account" : "Welcome back"}
           </h2>
-          <p style={{ fontSize: 14, color: 'var(--color-neutral-400)', marginBottom: 26 }}>
-            {isRegister ? 'Start managing projects in minutes.' : 'Sign in to continue to ProjectHub.'}
+          <p
+            style={{
+              fontSize: 14,
+              color: "var(--color-neutral-400)",
+              marginBottom: 26,
+            }}
+          >
+            {isRegister
+              ? "Start managing projects in minutes."
+              : "Sign in to continue to ProjectHub."}
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 8 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 14,
+              marginBottom: 8,
+            }}
+          >
             {isRegister ? (
               <TextField
                 label="Full name"
@@ -183,6 +260,22 @@ export function LoginPage() {
               onChange={(event) => setPassword(event.target.value)}
               placeholder="••••••••"
             />
+            {!isRegister ? (
+              <a
+                href="#"
+                onClick={(event) => {
+                  event.preventDefault();
+                  navigate("/forgot-password");
+                }}
+                style={{
+                  fontSize: 12.5,
+                  color: "var(--color-neutral-400)",
+                  alignSelf: "flex-end",
+                }}
+              >
+                Forgot password?
+              </a>
+            ) : null}
           </div>
 
           {error ? (
@@ -198,23 +291,36 @@ export function LoginPage() {
             loading={submitting}
             style={{ height: 42, marginTop: 6 }}
           >
-            {isRegister ? 'Create account' : 'Sign in'}
+            {isRegister ? "Create account" : "Sign in"}
             <ArrowRight size={15} weight="bold" />
           </Button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '20px 0' }}>
-            <span style={{ flex: 1, height: 1, background: 'var(--color-divider)' }} />
-            <span style={{ fontSize: 12, color: 'var(--color-neutral-500)' }}>or continue with</span>
-            <span style={{ flex: 1, height: 1, background: 'var(--color-divider)' }} />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              margin: "20px 0",
+            }}
+          >
+            <span
+              style={{ flex: 1, height: 1, background: "var(--color-divider)" }}
+            />
+            <span style={{ fontSize: 12, color: "var(--color-neutral-500)" }}>
+              or continue with
+            </span>
+            <span
+              style={{ flex: 1, height: 1, background: "var(--color-divider)" }}
+            />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <Button
               type="button"
               variant="secondary"
               block
               onClick={() => {
-                window.location.href = oauthUrl('google');
+                window.location.href = oauthUrl("google");
               }}
             >
               <GoogleIcon /> Continue with Google
@@ -224,7 +330,7 @@ export function LoginPage() {
               variant="secondary"
               block
               onClick={() => {
-                window.location.href = oauthUrl('facebook');
+                window.location.href = oauthUrl("facebook");
               }}
             >
               <FacebookIcon /> Continue with Facebook
@@ -234,25 +340,32 @@ export function LoginPage() {
               variant="secondary"
               block
               onClick={() => {
-                window.location.href = oauthUrl('apple');
+                window.location.href = oauthUrl("apple");
               }}
             >
               <AppleIcon /> Continue with Apple
             </Button>
           </div>
 
-          <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--color-neutral-400)', marginTop: 20 }}>
-            {isRegister ? 'Already have an account?' : 'New to ProjectHub?'}{' '}
+          <div
+            style={{
+              textAlign: "center",
+              fontSize: 13,
+              color: "var(--color-neutral-400)",
+              marginTop: 20,
+            }}
+          >
+            {isRegister ? "Already have an account?" : "New to ProjectHub?"}{" "}
             <a
               href="#"
               onClick={(event) => {
                 event.preventDefault();
                 setError(null);
-                setMode(isRegister ? 'login' : 'register');
+                setMode(isRegister ? "login" : "register");
               }}
-              style={{ fontFamily: 'var(--font-heading)' }}
+              style={{ fontFamily: "var(--font-heading)" }}
             >
-              {isRegister ? 'Sign in' : 'Create one'}
+              {isRegister ? "Sign in" : "Create one"}
             </a>
           </div>
         </form>
