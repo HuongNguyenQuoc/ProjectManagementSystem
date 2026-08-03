@@ -77,27 +77,16 @@ export function Gantt({ tasks }: { tasks: TaskListItem[] }) {
             </span>
             <div style={{ position: 'relative', flex: 1, height: 16 }}>
               <div
-                title={`${status.label} · ${task.progress}%`}
+                title={status.label}
                 style={{
                   position: 'absolute',
                   left: `${left}%`,
                   width: `${Math.max(width, 3)}%`,
                   height: 16,
-                  background: 'var(--color-neutral-800)',
+                  background: status.color,
                   borderRadius: 5,
-                  overflow: 'hidden',
                 }}
-              >
-                <div
-                  style={{
-                    width: `${task.progress}%`,
-                    height: '100%',
-                    background: status.color,
-                    borderRadius: 5,
-                    transition: 'width .7s ease',
-                  }}
-                />
-              </div>
+              />
             </div>
           </div>
         );

@@ -320,7 +320,6 @@ export function ProjectDetailPage() {
           projectId={projectId}
           projectName={project.name}
           isLeader={isLeader}
-          isAssignee={openTask_.assigneeId === user?.id}
           onClose={closeTask}
         />
       ) : null}

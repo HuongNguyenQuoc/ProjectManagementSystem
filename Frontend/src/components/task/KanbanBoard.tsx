@@ -104,7 +104,7 @@ export function KanbanBoard({ tasks, onOpenTask, onMoveTask, canDragStatus }: Ka
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(5, minmax(210px, 1fr))',
+        gridTemplateColumns: 'repeat(6, minmax(210px, 1fr))',
         gap: 12,
         alignItems: 'start',
       }}

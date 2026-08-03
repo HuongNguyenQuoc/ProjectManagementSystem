@@ -9,8 +9,8 @@ import { useActiveProjectContext } from '@/hooks/useActiveProjectContext';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useTasks } from '@/hooks/useTasks';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { BOARD_COLUMNS, ISSUE_SEVERITY, PROJECT_STATUS, TASK_PRIORITY, TASK_STATUS } from '@/lib/constants';
-import { ISSUE_SEVERITIES, TASK_PRIORITIES } from '@/types/api';
+import { ISSUE_SEVERITY, PROJECT_STATUS, TASK_PRIORITY, TASK_STATUS } from '@/lib/constants';
+import { ISSUE_SEVERITIES, TASK_PRIORITIES, TASK_STATUSES } from '@/types/api';
 
 export function DashboardPage() {
   const { projects, activeProjectId, activeRole, selectProject } = useActiveProjectContext();
@@ -41,7 +41,7 @@ export function DashboardPage() {
   if (dashboardLoading) return <LoadingState label="Loading dashboard…" />;
   if (isError || !dashboard) return <ErrorState error={new Error('Dashboard unavailable')} onRetry={() => void refetch()} />;
 
-  const statusEntries = BOARD_COLUMNS.map((key) => ({
+  const statusEntries = TASK_STATUSES.map((key) => ({
     label: TASK_STATUS[key].label,
     value: dashboard.tasksByStatus[key] ?? 0,
     color: TASK_STATUS[key].color,
@@ -60,7 +60,7 @@ export function DashboardPage() {
   const statusMeta = PROJECT_STATUS[dashboard.status];
 
   return (
-    <div className="ph-screen" style={{ maxWidth: 1180 }}>
+    <div className="ph-screen">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
         <select
           className="input"

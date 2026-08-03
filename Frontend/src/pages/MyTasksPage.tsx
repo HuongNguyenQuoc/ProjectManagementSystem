@@ -1,14 +1,13 @@
 import { useMemo, useState } from 'react';
 import { CaretRight, ListChecks } from '@phosphor-icons/react';
-import { ProgressBar } from '@/components/ui/ProgressBar';
-import { Tag } from '@/components/ui/Tag';
+import { StatusDot, Tag } from '@/components/ui/Tag';
 import { EmptyState, LoadingState } from '@/components/ui/States';
 import { TaskDrawer } from '@/components/task/TaskDrawer';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjects, useProject, useProjectRole } from '@/hooks/useProjects';
 import { useTasksAcrossProjects } from '@/hooks/useTasks';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { TASK_PRIORITY } from '@/lib/constants';
+import { TASK_PRIORITY, TASK_STATUS } from '@/lib/constants';
 import { formatDate, taskCode } from '@/lib/format';
 import type { TaskListItem } from '@/types/api';
 
@@ -84,6 +83,7 @@ export function MyTasksPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
           {myTasks.map((task) => {
             const priority = TASK_PRIORITY[task.priority];
+            const status = TASK_STATUS[task.status];
             return (
               <div
                 key={task.id}
@@ -111,19 +111,7 @@ export function MyTasksPage() {
                   </div>
                 </div>
                 <div style={{ width: 130, flex: 'none' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      fontSize: 11,
-                      marginBottom: 4,
-                      color: 'var(--color-neutral-400)',
-                    }}
-                  >
-                    <span>{task.status.replace('_', ' ')}</span>
-                    <span>{task.progress}%</span>
-                  </div>
-                  <ProgressBar value={task.progress} />
+                  <StatusDot color={status.color} label={status.label} />
                 </div>
                 <CaretRight size={16} color="var(--color-neutral-500)" />
               </div>
@@ -138,7 +126,6 @@ export function MyTasksPage() {
           projectId={openTaskDetail.projectId}
           projectName={openTaskDetail.projectName}
           isLeader={openRole === 'PROJECT_LEADER'}
-          isAssignee
           onClose={() => setOpenTask(null)}
         />
       ) : null}

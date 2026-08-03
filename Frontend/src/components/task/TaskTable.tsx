@@ -1,5 +1,4 @@
 import { Avatar } from '@/components/ui/Avatar';
-import { ProgressBar } from '@/components/ui/ProgressBar';
 import { StatusDot, Tag } from '@/components/ui/Tag';
 import { TableCard } from '@/components/ui/TableCard';
 import { EmptyState } from '@/components/ui/States';
@@ -7,7 +6,7 @@ import { formatDate, taskCode } from '@/lib/format';
 import { TASK_PRIORITY, TASK_STATUS } from '@/lib/constants';
 import type { TaskListItem } from '@/types/api';
 
-/** Board "List" view — Task / Assignee / Priority / Status / Progress / Due. */
+/** Board "List" view — Task / Assignee / Priority / Status / Due. */
 export function TaskTable({
   tasks,
   onOpenTask,
@@ -28,7 +27,6 @@ export function TaskTable({
             <th>Assignee</th>
             <th>Priority</th>
             <th>Status</th>
-            <th style={{ width: 130 }}>Progress</th>
             <th>Due</th>
           </tr>
         </thead>
@@ -58,14 +56,6 @@ export function TaskTable({
                 </td>
                 <td>
                   <StatusDot color={status.color} label={status.label} />
-                </td>
-                <td>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <div style={{ flex: 1 }}>
-                      <ProgressBar value={task.progress} />
-                    </div>
-                    <span style={{ fontSize: 12, width: 30 }}>{task.progress}%</span>
-                  </div>
                 </td>
                 <td style={{ color: 'var(--color-neutral-400)' }}>{formatDate(task.dueDate)}</td>
               </tr>

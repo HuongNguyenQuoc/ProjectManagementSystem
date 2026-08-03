@@ -10,12 +10,15 @@ import { queryClient } from '@/lib/queryClient';
 import { AdminProjectsPage } from '@/pages/AdminProjectsPage';
 import { AdminUsersPage } from '@/pages/AdminUsersPage';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
 import { IndexRedirect } from '@/pages/IndexRedirect';
 import { LoginPage } from '@/pages/LoginPage';
 import { MyTasksPage } from '@/pages/MyTasksPage';
 import { OAuthCallbackPage } from '@/pages/OAuthCallbackPage';
 import { ProjectDetailPage } from '@/pages/ProjectDetailPage';
 import { ProjectsPage } from '@/pages/ProjectsPage';
+import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
+import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
 
 function App() {
   return (
@@ -26,6 +29,9 @@ function App() {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/auth/callback" element={<OAuthCallbackPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppShell />}>
                   <Route index element={<IndexRedirect />} />

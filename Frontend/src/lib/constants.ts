@@ -58,13 +58,14 @@ export const TASK_STATUS: Record<TaskStatus, { label: string; color: string }> =
   CANCELLED: { label: 'Cancelled', color: 'var(--color-neutral-700)' },
 };
 
-/** The five swimlanes on the Kanban board; CANCELLED is drawer-only. */
+/** All six swimlanes on the Kanban board, in display order. */
 export const BOARD_COLUMNS: TaskStatus[] = [
   'TODO',
   'IN_PROGRESS',
   'IN_REVIEW',
   'BLOCKED',
   'DONE',
+  'CANCELLED',
 ];
 
 /* ── Task priority ────────────────────────────────────────────────────── */

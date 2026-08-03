@@ -1,7 +1,6 @@
 import type { DragEvent } from 'react';
 import { CalendarBlank } from '@phosphor-icons/react';
 import { Avatar } from '@/components/ui/Avatar';
-import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Tag } from '@/components/ui/Tag';
 import { formatDate, taskCode } from '@/lib/format';
 import { TASK_PRIORITY } from '@/lib/constants';
@@ -15,7 +14,7 @@ interface TaskCardProps {
   onDragEnd?: (event: DragEvent<HTMLDivElement>) => void;
 }
 
-/** Kanban card — priority-coloured left border, mini progress bar, due + assignee. */
+/** Kanban card — priority-coloured left border, due + assignee. */
 export function TaskCard({ task, onOpen, draggable = false, onDragStart, onDragEnd }: TaskCardProps) {
   const priority = TASK_PRIORITY[task.priority];
 
@@ -44,14 +43,6 @@ export function TaskCard({ task, onOpen, draggable = false, onDragStart, onDragE
         <Tag style={priority.tag}>{priority.label}</Tag>
       </div>
       <div style={{ fontSize: 13, lineHeight: 1.35, marginBottom: 9 }}>{task.title}</div>
-      <div style={{ marginBottom: 9 }}>
-        <ProgressBar
-          value={task.progress}
-          height={5}
-          fill={task.status === 'DONE' ? 'var(--color-success)' : undefined}
-          durationMs={400}
-        />
-      </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span
           style={{

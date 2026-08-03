@@ -19,27 +19,18 @@ interface TaskDrawerProps {
   projectId: string;
   projectName: string;
   isLeader: boolean;
-  isAssignee: boolean;
   onClose: () => void;
 }
 
-const DRAWER_STATUS_OPTIONS: TaskStatus[] = [...BOARD_COLUMNS, 'CANCELLED'];
+const DRAWER_STATUS_OPTIONS: TaskStatus[] = BOARD_COLUMNS;
 
-export function TaskDrawer({ task, projectId, projectName, isLeader, isAssignee, onClose }: TaskDrawerProps) {
+export function TaskDrawer({ task, projectId, projectName, isLeader, onClose }: TaskDrawerProps) {
   const { showToast } = useToast();
   const { user } = useAuth();
   const updateTask = useUpdateTask(projectId);
   const { data: comments, isLoading: commentsLoading } = useComments(projectId, task.id);
   const createComment = useCreateComment(projectId, task.id);
   const [commentDraft, setCommentDraft] = useState('');
-  const [progress, setProgress] = useState(task.progress);
-  // Reset the slider whenever the drawer is pointed at a different task —
-  // derived during render (React's recommended alternative to an effect).
-  const [syncedTaskId, setSyncedTaskId] = useState(task.id);
-  if (syncedTaskId !== task.id) {
-    setSyncedTaskId(task.id);
-    setProgress(task.progress);
-  }
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -49,17 +40,8 @@ export function TaskDrawer({ task, projectId, projectName, isLeader, isAssignee,
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
-  const canEditProgress = isLeader || isAssignee;
   const priority = TASK_PRIORITY[task.priority];
   const status = TASK_STATUS[task.status];
-
-  function commitProgress(value: number) {
-    if (value === task.progress) return;
-    updateTask.mutate(
-      { taskId: task.id, input: { progress: value } },
-      { onError: (error) => showToast(errorMessage(error), 'error') },
-    );
-  }
 
   function setStatus(nextStatus: TaskStatus) {
     if (nextStatus === task.status) return;
@@ -171,42 +153,6 @@ export function TaskDrawer({ task, projectId, projectName, isLeader, isAssignee,
                 <CalendarBlank size={14} />
                 {formatDate(task.dueDate)}
               </span>
-            </div>
-          </div>
-
-          <div style={{ margin: '20px 0' }}>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontSize: 12,
-                marginBottom: 8,
-              }}
-            >
-              <span style={{ color: 'var(--color-neutral-300)', fontFamily: 'var(--font-heading)' }}>
-                Progress
-              </span>
-              <span style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-accent-300)' }}>
-                {progress}%
-              </span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={5}
-              value={progress}
-              disabled={!canEditProgress}
-              onChange={(event) => setProgress(Number(event.target.value))}
-              onMouseUp={(event) => commitProgress(Number(event.currentTarget.value))}
-              onTouchEnd={(event) => commitProgress(Number(event.currentTarget.value))}
-              onKeyUp={(event) => commitProgress(Number(event.currentTarget.value))}
-              style={{ width: '100%' }}
-            />
-            <div style={{ fontSize: 11, color: 'var(--color-neutral-500)', marginTop: 6 }}>
-              {canEditProgress
-                ? 'Drag to update — reaching 100% marks the task Done.'
-                : 'Only the assignee or the project leader can update progress.'}
             </div>
           </div>
 
