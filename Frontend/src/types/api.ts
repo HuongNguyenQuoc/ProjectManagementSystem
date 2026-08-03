@@ -7,53 +7,70 @@
 
 /* ── Enums (prisma/schema.prisma) ─────────────────────────────────────── */
 
-export const USER_STATUSES = ['ACTIVE', 'INACTIVE', 'BLOCKED'] as const;
+export const USER_STATUSES = [
+  "ACTIVE",
+  "INACTIVE",
+  "BLOCKED",
+  "PENDING_VERIFICATION",
+] as const;
 export type UserStatus = (typeof USER_STATUSES)[number];
 
-export const GLOBAL_ROLES = ['ADMIN', 'USER'] as const;
+export const GLOBAL_ROLES = ["ADMIN", "USER"] as const;
 export type GlobalRole = (typeof GLOBAL_ROLES)[number];
 
-export const PROJECT_TYPES = ['WEB', 'MOBILE_APP', 'DESKTOP', 'API', 'AI', 'OTHER'] as const;
+export const PROJECT_TYPES = [
+  "WEB",
+  "MOBILE_APP",
+  "DESKTOP",
+  "API",
+  "AI",
+  "OTHER",
+] as const;
 export type ProjectType = (typeof PROJECT_TYPES)[number];
 
 export const PROJECT_STATUSES = [
-  'PLANNING',
-  'IN_PROGRESS',
-  'ON_HOLD',
-  'COMPLETED',
-  'CANCELLED',
+  "PLANNING",
+  "IN_PROGRESS",
+  "ON_HOLD",
+  "COMPLETED",
+  "CANCELLED",
 ] as const;
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
 
-export const PROJECT_ROLES = ['PROJECT_LEADER', 'MEMBER'] as const;
+export const PROJECT_ROLES = ["PROJECT_LEADER", "MEMBER"] as const;
 export type ProjectRole = (typeof PROJECT_ROLES)[number];
 
 export const MEMBER_POSITIONS = [
-  'FRONTEND_DEVELOPER',
-  'BACKEND_DEVELOPER',
-  'BUSINESS_ANALYST',
-  'TESTER',
-  'UI_UX_DESIGNER',
+  "FRONTEND_DEVELOPER",
+  "BACKEND_DEVELOPER",
+  "BUSINESS_ANALYST",
+  "TESTER",
+  "UI_UX_DESIGNER",
 ] as const;
 export type MemberPosition = (typeof MEMBER_POSITIONS)[number];
 
 export const TASK_STATUSES = [
-  'TODO',
-  'IN_PROGRESS',
-  'IN_REVIEW',
-  'BLOCKED',
-  'DONE',
-  'CANCELLED',
+  "TODO",
+  "IN_PROGRESS",
+  "IN_REVIEW",
+  "BLOCKED",
+  "DONE",
+  "CANCELLED",
 ] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
-export const TASK_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const;
+export const TASK_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 export type TaskPriority = (typeof TASK_PRIORITIES)[number];
 
-export const ISSUE_STATUSES = ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'] as const;
+export const ISSUE_STATUSES = [
+  "OPEN",
+  "IN_PROGRESS",
+  "RESOLVED",
+  "CLOSED",
+] as const;
 export type IssueStatus = (typeof ISSUE_STATUSES)[number];
 
-export const ISSUE_SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
+export const ISSUE_SEVERITIES = ["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const;
 export type IssueSeverity = (typeof ISSUE_SEVERITIES)[number];
 
 /* ── Envelope ─────────────────────────────────────────────────────────── */

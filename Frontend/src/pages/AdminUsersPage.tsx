@@ -117,7 +117,7 @@ export function AdminUsersPage() {
                           disabled={updateStatus.isPending}
                           onChange={(event) => void handleStatusChange(user.id, event.target.value as UserStatus)}
                         >
-                          {USER_STATUSES.map((value) => (
+                          {USER_STATUSES.filter((value) => value !== 'PENDING_VERIFICATION').map((value) => (
                             <option key={value} value={value}>
                               {USER_STATUS[value].label}
                             </option>

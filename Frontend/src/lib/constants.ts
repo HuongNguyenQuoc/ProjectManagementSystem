@@ -141,6 +141,7 @@ export const USER_STATUS: Record<UserStatus, { label: string; tag: CSSProperties
   ACTIVE: { label: 'Active', tag: tagSuccess },
   INACTIVE: { label: 'Inactive', tag: tagNeutral },
   BLOCKED: { label: 'Blocked', tag: tagDanger },
+  PENDING_VERIFICATION: { label: 'Pending Verification', tag: tagWarning },
 };
 
 export const GLOBAL_ROLE_LABEL: Record<GlobalRole, { label: string; tag: CSSProperties }> = {
