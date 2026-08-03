@@ -2,7 +2,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { EXPIRES_IN, JWT_SECRET } from "../../config/env.js";
 import { AppError } from "../errors/appError.js";
-import { sendVerificationEmail, sendPasswordResetEmail } from "../lib/mailer.js";
+import {
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+} from "../lib/mailer.js";
 import {
   compareVerificationCode,
   generateVerificationCode,
@@ -14,9 +17,9 @@ import {
   createUser,
   findUserByEmail,
   findUserById,
-  setVerificationCode,
+  resetPasswordAndClearResetCode,
   setPasswordResetCode,
-  resetPasswordAndClearResetCode
+  setVerificationCode,
 } from "../repositories/user.repository.js";
 
 interface RegisterInput {
@@ -55,8 +58,14 @@ export const registerUser = async (input: RegisterInput) => {
   await setVerificationCode(newUser.id, { code: hashedCode, expiresAt });
   await sendVerificationEmail(newUser.email, code);
 
-  const { password, verificationCode, verificationCodeExpiresAt, passwordResetCode, passwordResetCodeExpiresAt, ...safeUser } =
-    newUser;
+  const {
+    password,
+    verificationCode,
+    verificationCodeExpiresAt,
+    passwordResetCode,
+    passwordResetCodeExpiresAt,
+    ...safeUser
+  } = newUser;
   return safeUser;
 };
 
@@ -94,8 +103,14 @@ export const loginUser = async (input: LoginInput) => {
     expiresIn: EXPIRES_IN as jwt.SignOptions["expiresIn"],
   });
 
-  const { password, verificationCode, verificationCodeExpiresAt, passwordResetCode, passwordResetCodeExpiresAt, ...safeUser } =
-    user;
+  const {
+    password,
+    verificationCode,
+    verificationCodeExpiresAt,
+    passwordResetCode,
+    passwordResetCodeExpiresAt,
+    ...safeUser
+  } = user;
   return { user: safeUser, token };
 };
 
@@ -143,8 +158,14 @@ export const verifyEmail = async ({ email, code }: VerifyEmailInput) => {
     expiresIn: EXPIRES_IN as jwt.SignOptions["expiresIn"],
   });
 
-  const { password, verificationCode, verificationCodeExpiresAt, passwordResetCode, passwordResetCodeExpiresAt, ...safeUser } =
-    user;
+  const {
+    password,
+    verificationCode,
+    verificationCodeExpiresAt,
+    passwordResetCode,
+    passwordResetCodeExpiresAt,
+    ...safeUser
+  } = user;
   return { user: { ...safeUser, status: "ACTIVE" as const }, token };
 };
 
@@ -194,8 +215,14 @@ export const getCurrentUser = async (userId: string) => {
     throw new AppError(401, "User not found");
   }
 
-  const { password, verificationCode, verificationCodeExpiresAt, passwordResetCode, passwordResetCodeExpiresAt, ...safeUser } =
-    user;
+  const {
+    password,
+    verificationCode,
+    verificationCodeExpiresAt,
+    passwordResetCode,
+    passwordResetCodeExpiresAt,
+    ...safeUser
+  } = user;
   return safeUser;
 };
 
@@ -203,27 +230,34 @@ interface RequestPasswordResetInput {
   email: string;
 }
 
-export const requestPasswordReset = async ({ email }: RequestPasswordResetInput ) => {
+export const requestPasswordReset = async ({
+  email,
+}: RequestPasswordResetInput) => {
   const user = await findUserByEmail(email);
   if (!user) {
     throw new AppError(404, "User not found");
   }
 
   if (user.passwordResetCodeExpiresAt) {
-    const issuedAt = new Date(user.passwordResetCodeExpiresAt.getTime() - VERIFICATION_CODE_TTL_MINUTES * 60 * 1000);
+    const issuedAt = new Date(
+      user.passwordResetCodeExpiresAt.getTime() -
+        VERIFICATION_CODE_TTL_MINUTES * 60 * 1000,
+    );
     const secondsSinceIssued = (Date.now() - issuedAt.getTime()) / 1000;
     if (secondsSinceIssued < 60) {
-      throw new AppError(429, "Please wait before requesting another code");
+      throw new AppError(429, "Please wait before requesting another password reset code");
     }
   }
 
   const code = generateVerificationCode();
   const hashedCode = await hashVerificationCode(code);
-  const expiresAt = new Date(Date.now() + VERIFICATION_CODE_TTL_MINUTES * 60 * 1000); // 15 minutes from now
+  const expiresAt = new Date(
+    Date.now() + VERIFICATION_CODE_TTL_MINUTES * 60 * 1000,
+  ); // 15 minutes from now
 
   await setPasswordResetCode(user.id, { code: hashedCode, expiresAt });
   await sendPasswordResetEmail(user.email, code);
-}
+};
 
 interface ResetPasswordInput {
   email: string;
@@ -231,17 +265,31 @@ interface ResetPasswordInput {
   newPassword: string;
 }
 
-export const resetPassword = async ({ email, code, newPassword }: ResetPasswordInput ) => {
+export const resetPassword = async ({
+  email,
+  code,
+  newPassword,
+}: ResetPasswordInput) => {
   const user = await findUserByEmail(email);
   if (!user) {
     throw new AppError(404, "User not found");
   }
 
-  if (!user.passwordResetCode || !user.passwordResetCodeExpiresAt || user.passwordResetCodeExpiresAt < new Date()) {
-    throw new AppError(400, "Password reset code has expired, please request a new one");
+  if (
+    !user.passwordResetCode ||
+    !user.passwordResetCodeExpiresAt ||
+    user.passwordResetCodeExpiresAt < new Date()
+  ) {
+    throw new AppError(
+      400,
+      "Password reset code has expired, please request a new one",
+    );
   }
 
-  const isCodeValid = await compareVerificationCode(code, user.passwordResetCode);
+  const isCodeValid = await compareVerificationCode(
+    code,
+    user.passwordResetCode,
+  );
   if (!isCodeValid) {
     throw new AppError(400, "Invalid password reset code");
   }
@@ -253,12 +301,17 @@ export const resetPassword = async ({ email, code, newPassword }: ResetPasswordI
   const hashedPassword = await bcrypt.hash(newPassword, 10);
   await resetPasswordAndClearResetCode(user.id, hashedPassword);
 
-  const token = jwt.sign(
-    { userId: user.id },
-    JWT_SECRET as string,
-    { expiresIn: EXPIRES_IN as jwt.SignOptions["expiresIn"] }
-  );
+  const token = jwt.sign({ userId: user.id }, JWT_SECRET as string, {
+    expiresIn: EXPIRES_IN as jwt.SignOptions["expiresIn"],
+  });
 
-  const { password, verificationCode, verificationCodeExpiresAt, passwordResetCode, passwordResetCodeExpiresAt, ...safeUser } = user;
+  const {
+    password,
+    verificationCode,
+    verificationCodeExpiresAt,
+    passwordResetCode,
+    passwordResetCodeExpiresAt,
+    ...safeUser
+  } = user;
   return { user: safeUser, token };
 };

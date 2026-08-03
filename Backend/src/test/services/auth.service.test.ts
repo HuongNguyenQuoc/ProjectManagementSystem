@@ -1,18 +1,29 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import bcrypt from "bcryptjs";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "../../errors/appError.js";
 import * as userRepository from "../../repositories/user.repository.js";
-import { registerUser, loginUser } from "../../services/auth.service.js";
+import {
+  loginUser,
+  registerUser,
+  requestPasswordReset,
+  resetPassword
+} from "../../services/auth.service.js";
+import * as mailer from "../../lib/mailer.js";
 
+vi.mock("../../lib/mailer.js");
 vi.mock("../../repositories/user.repository.js");
 
 const fakeUser = {
   id: "user-1",
   fullName: "John Doe",
   email: "a@test.com",
-  password: bcrypt.hashSync("correct-password", 10), 
+  password: bcrypt.hashSync("correct-password", 10),
   status: "ACTIVE" as const,
   role: "USER" as const,
+  verificationCode: null,
+  verificationCodeExpiresAt: null,
+  passwordResetCode: null,
+  passwordResetCodeExpiresAt: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -25,7 +36,7 @@ describe("auth.service", () => {
   describe("registerUser", () => {
     it("throws 400 when required fields are missing", async () => {
       await expect(
-        registerUser({ fullName: "", email: "", password: ""}),
+        registerUser({ fullName: "", email: "", password: "" }),
       ).rejects.toThrow(AppError);
     });
 
@@ -33,7 +44,11 @@ describe("auth.service", () => {
       vi.mocked(userRepository.findUserByEmail).mockResolvedValue(fakeUser);
 
       await expect(
-        registerUser({ fullName: "A", email: "a@test.com", password: "123456" }),
+        registerUser({
+          fullName: "A",
+          email: "a@test.com",
+          password: "123456",
+        }),
       ).rejects.toThrow("Email already exists");
     });
 
@@ -82,7 +97,7 @@ describe("auth.service", () => {
       vi.mocked(userRepository.findUserByEmail).mockResolvedValue(fakeUser);
 
       await expect(
-        loginUser({ email: "a@test.com", password: "wrong-password"}),
+        loginUser({ email: "a@test.com", password: "wrong-password" }),
       ).rejects.toThrow("Invalid email or password");
     });
 
@@ -98,6 +113,97 @@ describe("auth.service", () => {
       expect(result.user).not.toHaveProperty("password");
     });
   });
+
+  describe("requestPasswordReset", () => {
+    it("throws 404 when user not found", async () => {
+      vi.mocked(userRepository.findUserByEmail).mockResolvedValue(null);
+
+      await expect(
+        requestPasswordReset({ email: "notfound@test.com" }),
+      ).rejects.toThrow("User not found");
+    });
+
+    it("throws 429 when the last code was issued under 60s ago", async () => {
+      vi.mocked(userRepository.findUserByEmail).mockResolvedValue({
+        ...fakeUser,
+        passwordResetCodeExpiresAt: new Date(Date.now() + 14.5 * 60 * 1000),
+      });
+
+      await expect(
+        requestPasswordReset({ email: "a@test.com" }),
+      ).rejects.toThrow(
+        "Please wait before requesting another password reset code",
+      );
+    });
+
+    it("generates and sends a new code when allowed", async () => {
+      vi.mocked(userRepository.findUserByEmail).mockResolvedValue(fakeUser);
+
+      await requestPasswordReset({ email: "a@test.com" });
+
+      expect(userRepository.setPasswordResetCode).toHaveBeenCalledWith(
+        fakeUser.id,
+        expect.objectContaining({ code: expect.any(String), expiresAt: expect.any(Date) })
+      );
+      expect(mailer.sendPasswordResetEmail).toHaveBeenCalled();
+    });
+  });
+
+  describe("resetPassword", () => {
+    const userWithResetCode = {
+      ...fakeUser,
+      passwordResetCode: bcrypt.hashSync("123456", 10),
+      passwordResetCodeExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
+    };
+
+    it("throws 404 when user not found", async () => {
+      vi.mocked(userRepository.findUserByEmail).mockResolvedValue(null);
+
+      await expect(
+        resetPassword({ email: "notfound@test.com", code: "123456", newPassword: "NewPass123" }),
+      ).rejects.toThrow(AppError);
+    });
+
+    it("throws when the code has expired", async () => {
+      vi.mocked(userRepository.findUserByEmail).mockResolvedValue({
+        ...userWithResetCode,
+        passwordResetCodeExpiresAt: new Date(Date.now() - 1 * 60 * 1000),
+      });
+
+      await expect(
+        resetPassword({ email: "a@test.com", code: "123456", newPassword: "NewPass123" }),
+      ).rejects.toThrow("Password reset code has expired, please request a new one");
+    });
+
+    it("throws when the code is invalid", async () => {
+      vi.mocked(userRepository.findUserByEmail).mockResolvedValue(userWithResetCode);
+
+      await expect(
+        resetPassword({ email: "a@test.com", code: "000000", newPassword: "NewPass123" }),
+      ).rejects.toThrow("Invalid password reset code");
+    });
+    
+    it("throws when new password is missing", async () => {
+      vi.mocked(userRepository.findUserByEmail).mockResolvedValue(userWithResetCode);
+
+      await expect(
+        resetPassword({ email: "a@test.com", code: "123456", newPassword: "" })
+      ).rejects.toThrow("New password is required");
+    });
+
+    it("hashes the new password, clears the code, and returns a token on success", async () => {
+      vi.mocked(userRepository.findUserByEmail).mockResolvedValue(userWithResetCode);
+
+      const res = await resetPassword({ email: "a@test.com", code: "123456", newPassword: "NewPass123" });
+
+      expect(userRepository.resetPasswordAndClearResetCode).toHaveBeenCalledWith(
+        userWithResetCode.id,
+        expect.any(String),
+      );
+      const savedHashedPassword = vi.mocked(userRepository.resetPasswordAndClearResetCode).mock.calls[0][1];
+      expect(savedHashedPassword).not.toBe("NewPass123");
+      expect(res.token).toBeTypeOf("string");
+      expect(res.user).not.toHaveProperty("password");
+    });
+  });
 });
-
-
