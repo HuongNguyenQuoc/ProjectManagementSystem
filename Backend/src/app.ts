@@ -9,6 +9,8 @@ import userRouter from "./routes/user.routes.js";
 
 const app: Application = express();
 
+app.set('trust proxy', 1); // Caddy is the only proxy in front of Express
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Apple's OAuth callback posts a form-encoded body
 app.use(cookieParser());

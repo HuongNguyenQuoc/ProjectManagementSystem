@@ -14,16 +14,17 @@ import {
   oauthRedirectController,
 } from "../controllers/oauth.controller.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
+import { authRateLimiter } from "../middlewares/rateLimit.js";
 
 const authRouter = Router();
 
-authRouter.post("/register", registerController);
-authRouter.post("/login", loginController);
-authRouter.post("/verify-email", verifyEmailController);
-authRouter.post("/resend-verification", resendVerificationController);
+authRouter.post("/register", authRateLimiter, registerController);
+authRouter.post("/login", authRateLimiter, loginController);
+authRouter.post("/verify-email", authRateLimiter, verifyEmailController);
+authRouter.post("/resend-verification", authRateLimiter, resendVerificationController);
 authRouter.post("/logout", logoutController);
-authRouter.post("/forgot-password", requestPasswordResetController);
-authRouter.post ("/reset-password", resetPasswordController);
+authRouter.post("/forgot-password", authRateLimiter, requestPasswordResetController);
+authRouter.post ("/reset-password", authRateLimiter, resetPasswordController);
 // Must be registered before "/:provider" below, or Express matches provider = "me" first.
 authRouter.get("/me", requireAuth, meController);
 
